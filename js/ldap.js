@@ -5,19 +5,32 @@
 /**
  * At this point there is slightly simple implementation of LDAP query library
  * @param op operation to concat with
- * @param sel1 left operation
- * @param sel2 right operation
+ * @param seq {Array}
  * @constructor
  */
-function Operation(op, sel1, sel2) {
+function Operation(op, seq) {
     
     this.op = op;
-    this.left = sel1;
-    this.right = sel2;
+    this.seq = seq;
 }
 
 
 Operation.prototype = {
+
+    _insert: function(op, that) {
+
+        if (this instanceof Operation && this.op === op) {
+
+            if (that instanceof Operation && that.op === op) {
+                this.seq = this.seq.concat(that.seq);
+            } else {
+                this.seq.push(that);
+            }
+            return this;
+        } else {
+            return new Operation(op, [this, that]);
+        }
+    },
 
     /**
      * Concatenates two items through '&'
@@ -25,7 +38,8 @@ Operation.prototype = {
      * @returns {Operation} composite of 'this' and otherOperation
      */
     and: function(otherOperation) {
-        return new Operation('&', this, otherOperation)
+
+        return this._insert('&', otherOperation);
     },
 
     /**
@@ -34,7 +48,8 @@ Operation.prototype = {
      * @returns {Operation} composite of 'this' and otherOperation
      */
     or: function(otherOperation) {
-        return new Operation('|', this, otherOperation)
+
+        return this._insert('|', otherOperation);
     },
 
     /**
@@ -42,7 +57,12 @@ Operation.prototype = {
      * @returns {string}
      */
     stringify: function() {
-        return '(' + this.op + this.left.stringify() + this.right.stringify() + ')';
+
+        function toStr(value) {
+            return value.stringify();
+        }
+
+        return '(' + this.op + this.seq.map(toStr).join("") + ')';
     }
 };
 
@@ -95,6 +115,11 @@ function LDAPExprBuilder(param) {
 
 LDAPExprBuilder.prototype = {
 
+    /**
+     * Builds (field=value) checker
+     * @param value
+     * @returns {Operation} representation of (field=value)
+     */
     eq: function(value) {
 
         return new Selector({
@@ -103,6 +128,12 @@ LDAPExprBuilder.prototype = {
             value: value
         });
     },
+
+    /**
+     * Builds (!field=value)
+     * @param value
+     * @returns {Operation} representation of (!field=value)
+     */
     neq: function(value) {
 
         return new Selector({

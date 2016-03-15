@@ -1,3 +1,4 @@
+
 function present(name) { return a("symbolicname").eq(name); }
 function notpresent(name) {return a("symbolicname").neq(name); }
 
@@ -11,3 +12,4 @@ present("hive.replication.central.*")
   .or(present("hive.commons.json4s"))
   .or(present("hive.commons.korro"))
   .or(present("hive.commons.akka"))
+  .and(present("hive.replication.stuff"))
