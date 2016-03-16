@@ -1,80 +1,25 @@
-
 'use strict';
 
 
 /**
- * At this point there is slightly simple implementation of LDAP query library
- * @param op operation to concat with
- * @param seq {Array}
+ * Base trait for LDAP query components
  * @constructor
  */
-function Operation(op, seq) {
-    
-    this.op = op;
-    this.seq = seq;
+function LdapSyntaxEntryTrait() {
+    // Abstract
 }
 
 
-Operation.prototype = {
-
-    _insert: function(op, that) {
-
-        if (this instanceof Operation && this.op === op) {
-
-            if (that instanceof Operation && that.op === op) {
-                this.seq = this.seq.concat(that.seq);
-            } else {
-                this.seq.push(that);
-            }
-            return this;
-        } else {
-            return new Operation(op, [this, that]);
-        }
-    },
-
-    /**
-     * Concatenates two items through '&'
-     * @param otherOperation other instance of operation
-     * @returns {Operation} composite of 'this' and otherOperation
-     */
-    and: function(otherOperation) {
-
-        return this._insert('&', otherOperation);
-    },
-
-    /**
-     * Concatenates two items through '|'
-     * @param otherOperation
-     * @returns {Operation} composite of 'this' and otherOperation
-     */
-    or: function(otherOperation) {
-
-        return this._insert('|', otherOperation);
-    },
-
-    /**
-     * Converts this value to string representation of LDAP
-     * @returns {string}
-     */
-    stringify: function() {
-
-        function toStr(value) {
-            return value.stringify();
-        }
-
-        return '(' + this.op + this.seq.map(toStr).join("") + ')';
-    }
-};
-
-
 /**
- * @param expr.field 
+ * LDAP Filter
+ * @param expr.field
  * @param expr.cond
  * @param expr.value
  * @param expr.negation
+ * @constructor
  */
-function Selector(expr) {
-    
+function LdapFilter(expr) {
+
     this.field = expr.field;
     this.cond = expr.cond;
     this.value = expr.value;
@@ -82,11 +27,101 @@ function Selector(expr) {
 }
 
 
-Selector.prototype = Object.create(Operation.prototype, {
+/**
+ * List of LDAP Filters.
+ * @param op operation to concat with
+ * @param seq {Array} of implementations of {LdapSyntaxEntryTrait}
+ * @constructor
+ */
+function LdapFilterList(op, seq) {
 
-    stringify: {
+    this.op = op;
+    this.seq = seq;
+}
 
-        // Override
+
+LdapSyntaxEntryTrait.prototype = {
+
+    /**
+     * Concatenates two entries through '&'
+     * @param that other instance of operation
+     * @returns {LdapFilterList} composite of 'this' and that
+     */
+    and: function(that) {
+        return new LdapFilterList('&', [this, that]);
+    },
+
+    /**
+     * Concatenates two entries through '|'
+     * @param that
+     * @returns {LdapFilterList} composite of 'this' and that
+     */
+    or: function(that) {
+        return new LdapFilterList('|', [this, that]);
+    },
+
+    /**
+     * Abstract (This function is Trait implementation specific.)
+     * @returns {string} representation of entry
+     */
+    toString: function() {
+        throw new Error("Abstract function call");
+    }
+};
+
+
+LdapFilterList.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
+
+    // Override
+    toString: {
+
+        value: function() {
+
+            function toStr(value) {
+                return value.toString();
+            }
+
+            return '(' + this.op + this.seq.map(toStr).join("") + ')';
+        },
+        enumerable: true,
+        configurable: true,
+        writable: true
+    }
+});
+
+
+LdapFilterList.prototype.constructor = LdapFilterList;
+
+
+/*
+
+ _insert: function(op, that) {
+
+ if (this instanceof FilterList && this.op === op) {
+
+ if (that instanceof FilterList && that.op === op) {
+ this.seq = this.seq.concat(that.seq);
+ } else {
+ this.seq.push(that);
+ }
+ return this;
+ } else {
+ return new FilterList(op, [this, that]);
+ }
+ }
+
+
+ */
+
+
+
+
+
+LdapFilter.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
+
+    // Override
+    toString: {
+
         value: function() {
 
             var result = '(';
@@ -105,24 +140,24 @@ Selector.prototype = Object.create(Operation.prototype, {
 });
 
 
-Selector.prototype.constructor = Selector;
+LdapFilter.prototype.constructor = LdapFilter;
 
 
-function LDAPExprBuilder(param) {
+function LdapFilterBuilder(param) {
     this.param = param;
 }
 
 
-LDAPExprBuilder.prototype = {
+LdapFilterBuilder.prototype = {
 
     /**
      * Builds (field=value) checker
      * @param value
-     * @returns {Operation} representation of (field=value)
+     * @returns {LdapFilterList} representation of (field=value)
      */
     eq: function(value) {
 
-        return new Selector({
+        return new LdapFilter({
             field: this.param,
             cond: '=',
             value: value
@@ -132,11 +167,11 @@ LDAPExprBuilder.prototype = {
     /**
      * Builds (!field=value)
      * @param value
-     * @returns {Operation} representation of (!field=value)
+     * @returns {LdapFilterList} representation of (!field=value)
      */
     neq: function(value) {
 
-        return new Selector({
+        return new LdapFilter({
             field: this.param,
             cond: '=',
             value: value,
@@ -147,7 +182,7 @@ LDAPExprBuilder.prototype = {
 
 
 function a(param) {
-    return new LDAPExprBuilder(param);
+    return new LdapFilterBuilder(param);
 }
 
 
