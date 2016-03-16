@@ -40,6 +40,121 @@ function LdapFilterList(op, seq) {
 }
 
 
+/**
+ *
+ * @param op
+ * @param array {Array} of {LdapSyntaxEntryTrait} implementations
+ * @constructor
+ */
+function LdapFilterListOptimization(op, array) {
+
+    this.op = op;
+    this.accumulator = [];
+
+    const slice = array.slice();
+    slice.sort(function(a, b) { return a.getOrdering() - b.getOrdering(); });
+
+    this.stream = function*() {
+
+        for (var i in slice) {
+            yield slice[i];
+        }
+    }();
+}
+
+
+LdapFilterListOptimization.prototype = {
+
+    newMerger: function(item) {
+
+      if (item instanceof LdapFilterList) {
+          return this.newListMerger(item);
+      } else {
+          return this.newDefaultMerger(item);
+      }
+    },
+
+
+    /**
+     * Builds merger function specific to handle {LdapFilterList} stream value
+     * @param fl {LdapFilterList} object which represents current cursor position
+     * @returns {Function}  which accepts next value for merging
+     */
+    newListMerger: function(fl) {
+
+        const self = this;
+        const filterList = fl;
+
+        return function(other) {
+
+            if (other instanceof LdapFilterList && filterList.op === other.op) {
+
+                const newFilterList = new LdapFilterList(filterList.op, filterList.seq.concat(other.seq));
+                return { proceed: true, state: self.newListMerger(newFilterList) };
+            } else {
+                return { proceed: false, result: filterList};
+            }
+        };
+    },
+
+
+    /**
+     * Builds default all-purpose merger function
+     * @param some value to be wrapped with merger function
+     * @returns {Function} which accepts next value for merging
+     */
+    newDefaultMerger: function(some) {
+
+        const someStuff = some;
+        return function (other) {
+            return { proceed: false, result: someStuff };
+        };
+    },
+
+
+    /**
+     * Fires optimization task. It may look clumsy. But, anyway, it should work :)
+     */
+    perform: function() {
+
+        var m = null; // Merger function
+        while(true) {
+
+            var nextVal = this.stream.next();
+            if (nextVal.done) {
+
+                if (m) {
+                    var result = m.call(this, 0).result;
+                    this.accumulator.push(result);
+                }
+                break;
+            }
+
+            if (m) {
+
+                const merged = m(nextVal.value);
+                if (merged.proceed) {
+                    m = merged.state;
+                } else {
+
+                    this.accumulator.push(merged.result);
+                    m = this.newMerger(nextVal.value);
+                }
+            } else {
+                m = this.newMerger(nextVal.value);
+            }
+        }
+
+        // TODO: Still, there is a way to do it less error prone way, therefore will see later how it goes
+        if (this.accumulator.length == 1 && this.accumulator[0] instanceof LdapFilterList) {
+            return this.accumulator[0]
+        } else {
+            return new LdapFilterList(this.op, this.accumulator);
+        }
+    }
+};
+
+
 LdapSyntaxEntryTrait.prototype = {
 
     /**
@@ -61,11 +176,40 @@ LdapSyntaxEntryTrait.prototype = {
     },
 
     /**
+     * Tries to optimize this value
+     */
+    optimize: function() {
+
+        if (this instanceof LdapFilterList) {
+
+            const toOptimized = function(value) {
+                return value.optimize();
+            };
+            const seqOfOptimized = this.seq.map(toOptimized);
+            return new LdapFilterListOptimization(this.op, seqOfOptimized).perform();
+
+        } else {
+
+            // Others are not aware of optimization :)
+            return this;
+        }
+    },
+
+    /**
      * Abstract (This function is Trait implementation specific.)
      * @returns {string} representation of entry
      */
     toString: function() {
         throw new Error("Abstract function call");
+    },
+
+    /**
+     * @returns {number} representation of entry. It helps to sort items for further optimization
+     */
+    getOrdering: function() {
+
+        // Assume this value to the greatest among all possible. :)
+        return 100000;
     }
 };
 
@@ -86,6 +230,18 @@ LdapFilterList.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
         enumerable: true,
         configurable: true,
         writable: true
+    },
+
+    getOrdering: {
+
+        value: function() {
+
+            // We want FilerLists with the same concatenation operand to have the same ordering value
+            return 100 + this.op.charCodeAt(0);
+        },
+        enumerable: true,
+        configurable: true,
+        writable: true
     }
 });
 
@@ -97,24 +253,11 @@ LdapFilterList.prototype.constructor = LdapFilterList;
 
  _insert: function(op, that) {
 
- if (this instanceof FilterList && this.op === op) {
 
- if (that instanceof FilterList && that.op === op) {
- this.seq = this.seq.concat(that.seq);
- } else {
- this.seq.push(that);
- }
- return this;
- } else {
- return new FilterList(op, [this, that]);
- }
  }
 
 
  */
-
-
-
 
 
 LdapFilter.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
