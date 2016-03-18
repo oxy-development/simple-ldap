@@ -12,4 +12,6 @@ var result = present("hive.replication.central.*")
   .or(present("hive.commons.json4s"))
   .or(present("hive.commons.korro"))
   .or(present("hive.commons.akka"))
-  .and(present("hive.replication.stuff"))
+  .and(present("hive.replication.stuff"));
+
+console.log(result.optimize().toString());

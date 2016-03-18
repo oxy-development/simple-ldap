@@ -155,15 +155,15 @@ LdapFilterListOptimization.prototype = {
      */
     perform: function() {
 
-        var m = null; // Merger function
+        let m = null; // Merger function
         let stream = this.doRelaxation()();
         while(true) {
 
-            var nextVal = stream.next();
+            let nextVal = stream.next();
             if (nextVal.done) {
 
                 if (m) {
-                    var result = m.call(this, 0).result;
+                    let result = m.call(this, 0).result;
                     this.accumulator.push(result);
                 }
                 break;
