@@ -61,20 +61,21 @@ LdapFilterListOptimization.prototype = {
         return a.getOrdering() - b.getOrdering();
     },
 
+    /**
+     * Unfolds all nested {LdapFilterList} values with the same
+     * logical op property
+     * @returns {*} generator over relaxed values
+     */
     doRelaxation: function () {
 
         const self = this;
         function relax(array) {
 
-            array.sort(self.ordering);
-
-            // 1. Sort stuff
             var result = [];
             var proceed = false;
             for (var i=0, length = array.length; i < length; i++) {
 
                 let that = array[i];
-                // 2. Unfold
                 if (that instanceof LdapFilterList && that.op === self.op) {
                     proceed = true;
                     result = result.concat(that.seq)
@@ -91,6 +92,7 @@ LdapFilterListOptimization.prototype = {
         }
 
         const relaxed = relax(this.slice.slice());
+        relaxed.sort(self.ordering);
 
         return function* () {
 
@@ -142,7 +144,7 @@ LdapFilterListOptimization.prototype = {
     newDefaultMerger: function(some) {
 
         const someStuff = some;
-        return function (other) {
+        return function () {
             return { proceed: false, result: someStuff };
         };
     },
@@ -182,7 +184,7 @@ LdapFilterListOptimization.prototype = {
             }
         }
 
-        // TODO: Still, there is a way to do it less error prone way, therefore will see later how it goes
+        // TODO: Still, there is a way to do it in less error prone way, therefore will see later how it goes
         if (this.accumulator.length == 1 && this.accumulator[0] instanceof LdapFilterList) {
             return this.accumulator[0]
         } else {
@@ -286,17 +288,6 @@ LdapFilterList.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
 LdapFilterList.prototype.constructor = LdapFilterList;
 
 
-/*
-
- _insert: function(op, that) {
-
-
- }
-
-
- */
-
-
 LdapFilter.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
 
     // Override
@@ -369,4 +360,3 @@ function a(param) {
 function an(param) {
    return a(param);
 }
-
