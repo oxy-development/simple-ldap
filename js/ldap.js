@@ -75,7 +75,7 @@ LdapFilterListOptimization.prototype = {
             var proceed = false;
             for (var i=0, length = array.length; i < length; i++) {
 
-                let that = array[i];
+                var that = array[i];
                 if (that instanceof LdapFilterList && that.op === self.op) {
                     proceed = true;
                     result = result.concat(that.seq)
@@ -97,7 +97,7 @@ LdapFilterListOptimization.prototype = {
         return function* () {
 
             const length = relaxed.length;
-            for (let i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
                 yield relaxed[i];
             }
         }
@@ -155,15 +155,15 @@ LdapFilterListOptimization.prototype = {
      */
     perform: function() {
 
-        let m = null; // Merger function
-        let stream = this.doRelaxation()();
+        var m = null; // Merger function
+        var stream = this.doRelaxation()();
         while(true) {
 
-            let nextVal = stream.next();
+            var nextVal = stream.next();
             if (nextVal.done) {
 
                 if (m) {
-                    let result = m.call(this, 0).result;
+                    var result = m.call(this, 0).result;
                     this.accumulator.push(result);
                 }
                 break;
