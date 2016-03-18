@@ -51,19 +51,55 @@ function LdapFilterListOptimization(op, array) {
     this.op = op;
     this.accumulator = [];
 
-    const slice = array.slice();
-    slice.sort(function(a, b) { return a.getOrdering() - b.getOrdering(); });
-
-    this.stream = function*() {
-
-        for (var i in slice) {
-            yield slice[i];
-        }
-    }();
+    this.slice = array.slice();
 }
 
 
 LdapFilterListOptimization.prototype = {
+
+    ordering: function(a, b) {
+        return a.getOrdering() - b.getOrdering();
+    },
+
+    doRelaxation: function () {
+
+        const self = this;
+        function relax(array) {
+
+            array.sort(self.ordering);
+
+            // 1. Sort stuff
+            var result = [];
+            var proceed = false;
+            for (var i=0, length = array.length; i < length; i++) {
+
+                let that = array[i];
+                // 2. Unfold
+                if (that instanceof LdapFilterList && that.op === self.op) {
+                    proceed = true;
+                    result = result.concat(that.seq)
+                } else {
+                    result.push(that);
+                }
+            }
+
+            if (proceed) {
+                return relax(result);
+            } else {
+                return result;
+            }
+        }
+
+        const relaxed = relax(this.slice.slice());
+
+        return function* () {
+
+            const length = relaxed.length;
+            for (let i = 0; i < length; i++) {
+                yield relaxed[i];
+            }
+        }
+    },
 
     newMerger: function(item) {
 
@@ -118,9 +154,10 @@ LdapFilterListOptimization.prototype = {
     perform: function() {
 
         var m = null; // Merger function
+        let stream = this.doRelaxation()();
         while(true) {
 
-            var nextVal = this.stream.next();
+            var nextVal = stream.next();
             if (nextVal.done) {
 
                 if (m) {
@@ -332,3 +369,4 @@ function a(param) {
 function an(param) {
    return a(param);
 }
+
