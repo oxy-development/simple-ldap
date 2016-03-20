@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>LDAP query generator</title>
+    <script src="https://raw.githubusercontent.com/oxy-development/simple-ldap/master/js/ldap.js"></script>
+  </head>
+
+  <body>
+
+    <div id="ldap-elements">
+      <div class="filter">
+        <input type="text" class="attr" />
+        <select class="filter-type">
+          <option class="equal">=</option>
+          <option class="not-equal">!=</option>
+          <option class="approx">~=</option>
+          <option class="greater-equal">&gt;=</option>
+          <option class="greater">&gt;</option>
+          <option class="less-equal">&lt;=</option>
+          <option class="less">&lt;</option>
+        </select>
+        <input type="text" class="value" />
+      </div>
+      <div class="filter-single">
+        <button class="cond-not">!</button>
+      </div>
+      <div class="filter-list">
+        <select class="cond-type">
+          <option class="cond-and">&amp;</option>
+          <option class="cond-or">|</option>
+        </select>
+        <!-- filters -->
+      </div>
+      <button class="add-filter">+</button>
+    </div>
+
+  </body>
+
+</html>
