@@ -2,12 +2,47 @@
 <html lang="en">
 
   <head>
+
     <meta charset="UTF-8">
     <title>LDAP query generator</title>
+
+    <script
+      src="http://code.jquery.com/jquery-2.2.2.min.js"
+      integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
+      crossorigin="anonymous">
+    </script>
     <script src="https://raw.githubusercontent.com/oxy-development/simple-ldap/master/js/ldap.js"></script>
+
+    <style media="screen">
+
+      #ldap-elements {
+        display: none;
+      }
+
+    </style>
+
+    <script type="text/javascript">
+      $(document).ready(function() {
+
+        function elem(s) {
+          return $('#ldap-elements ' + s).clone();
+        }
+
+        function appendSingle(sel) {
+          sel.append(elem('.filter-single').append(elem('.filter')).append(elem('.add-filter')));
+        }
+
+        appendSingle($('.block'));
+
+      });
+    </script>
   </head>
 
   <body>
+
+    <div class="block">
+
+    </div>
 
     <div id="ldap-elements">
       <div class="filter">
@@ -24,7 +59,7 @@
         <input type="text" class="value" />
       </div>
       <div class="filter-single">
-        <button class="cond-not">!</button>
+        <input type="checkbox" class="cond-not" />!
       </div>
       <div class="filter-list">
         <select class="cond-type">
