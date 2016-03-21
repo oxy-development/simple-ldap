@@ -18,7 +18,7 @@ function LdapSyntaxEntryTrait() {
  * @param expr.negation
  * @constructor
  */
-function LdapFilter(expr) {
+function LdapItem(expr) {
 
     this.attr = expr.attr;
     this.filtertype = expr.filtertype;
@@ -290,7 +290,7 @@ LdapFilterList.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
 LdapFilterList.prototype.constructor = LdapFilterList;
 
 
-LdapFilter.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
+LdapItem.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
 
     // Override
     toString: {
@@ -313,7 +313,7 @@ LdapFilter.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
 });
 
 
-LdapFilter.prototype.constructor = LdapFilter;
+LdapItem.prototype.constructor = LdapItem;
 
 
 function LdapFilterBuilder(param) {
@@ -323,9 +323,9 @@ function LdapFilterBuilder(param) {
 
 LdapFilterBuilder.prototype = {
 
-    _mkFilter: function(filtertype, value) {
+    _mkItem: function(filtertype, value) {
 
-        return new LdapFilter({
+        return new LdapItem({
             attr: this.param,
             filtertype: filtertype,
             value: value
@@ -353,43 +353,43 @@ LdapFilterBuilder.prototype = {
      * @returns {LdapFilterList} representation of (field=value)
      */
     eq: function(value) {
-        return this._mkFilter("=", this._escape(value));
+        return this._mkItem("=", this._escape(value));
     },
 
     /**
      * Builds (attr=*)
-     * @returns {LdapFilter}
+     * @returns {LdapItem}
      */
     isPresent: function() {
-        return this._mkFilter("=", "*");
+        return this._mkItem("=", "*");
     },
 
     /**
      * Builds (attr >= value) checker
      * @param value
-     * @returns {LdapFilter}
+     * @returns {LdapItem}
      */
     ge: function(value) {
 
-        return this._mkFilter(">=", this._escape(value));
+        return this._mkItem(">=", this._escape(value));
     },
 
     /**
      * Builds (attr<=value) checker
      * @param value
-     * @returns {LdapFilter}
+     * @returns {LdapItem}
      */
     le: function(value) {
-        return this._mkFilter("<=", this._escape(value));
+        return this._mkItem("<=", this._escape(value));
     },
 
     /**
      * Builds (attr~=value) checker
      * @param value
-     * @returns {LdapFilter}
+     * @returns {LdapItem}
      */
     apx: function(value) {
-        return this._mkFilter("~=", this._escape(value));
+        return this._mkItem("~=", this._escape(value));
     },
 
     /**
@@ -400,7 +400,7 @@ LdapFilterBuilder.prototype = {
      */
     neq: function(value) {
 
-        return new LdapFilter({
+        return new LdapItem({
             attr: this.param,
             filtertype: '=',
             value: value,
