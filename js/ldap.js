@@ -12,17 +12,19 @@ function LdapSyntaxEntryTrait() {
 
 /**
  * LDAP Filter
- * @param expr.field
- * @param expr.cond
+ * @param expr.attr
+ * @param expr.filtertype
  * @param expr.value
  * @param expr.negation
  * @constructor
  */
 function LdapFilter(expr) {
 
-    this.field = expr.field;
-    this.cond = expr.cond;
+    this.attr = expr.attr;
+    this.filtertype = expr.filtertype;
     this.value = expr.value;
+
+    // TODO: Extract negation as compound element case
     this.negation = expr.negation;
 }
 
@@ -300,7 +302,7 @@ LdapFilter.prototype = Object.create(LdapSyntaxEntryTrait.prototype, {
                 result = result + '!';
             }
 
-            result = result + this.field + this.cond + this.value;
+            result = result + this.attr + this.filtertype + this.value;
             result = result + ')';
             return result;
         },
@@ -321,21 +323,77 @@ function LdapFilterBuilder(param) {
 
 LdapFilterBuilder.prototype = {
 
+    _mkFilter: function(filtertype, value) {
+
+        return new LdapFilter({
+            attr: this.param,
+            filtertype: filtertype,
+            value: value
+        });
+    },
+
+    _escape: function(value) {
+
+        return value.split('').map(function(char) {
+
+            switch (char) {
+                case '(':  return "\\28";
+                case ')':  return "\\29";
+                case '*':  return "\\2a";
+                case '\\': return '\\5c';
+                case '/':  return "\\2f";
+                default:   return char;
+            }
+        }).join('')
+    },
+
     /**
      * Builds (field=value) checker
      * @param value
      * @returns {LdapFilterList} representation of (field=value)
      */
     eq: function(value) {
-
-        return new LdapFilter({
-            field: this.param,
-            cond: '=',
-            value: value
-        });
+        return this._mkFilter("=", this._escape(value));
     },
 
     /**
+     * Builds (attr=*)
+     * @returns {LdapFilter}
+     */
+    isPresent: function() {
+        return this._mkFilter("=", "*");
+    },
+
+    /**
+     * Builds (attr >= value) checker
+     * @param value
+     * @returns {LdapFilter}
+     */
+    ge: function(value) {
+
+        return this._mkFilter(">=", this._escape(value));
+    },
+
+    /**
+     * Builds (attr<=value) checker
+     * @param value
+     * @returns {LdapFilter}
+     */
+    le: function(value) {
+        return this._mkFilter("<=", this._escape(value));
+    },
+
+    /**
+     * Builds (attr~=value) checker
+     * @param value
+     * @returns {LdapFilter}
+     */
+    apx: function(value) {
+        return this._mkFilter("~=", this._escape(value));
+    },
+
+    /**
+     * TODO: This is a mistake. Not a case;
      * Builds (!field=value)
      * @param value
      * @returns {LdapFilterList} representation of (!field=value)
@@ -343,8 +401,8 @@ LdapFilterBuilder.prototype = {
     neq: function(value) {
 
         return new LdapFilter({
-            field: this.param,
-            cond: '=',
+            attr: this.param,
+            filtertype: '=',
             value: value,
             negation: true
         });
