@@ -42,3 +42,70 @@ StreamWrapper.prototype = {
         });
     }
 };
+
+
+function Seq(_1, _2) {
+    this._1 = _1;
+    this._2 = _2;
+}
+
+
+/**
+ *
+ * @param impl is {function} which accepts input stream of tokens and returns some
+ * parse result.
+ * @constructor
+ */
+function AbstractLdapParser(impl) {
+    this.f = impl;
+}
+
+
+AbstractLdapParser.prototype = {
+
+    $parse: function(input) {
+        this.f.call(this, input);
+    },
+
+    $or: function(other) {
+
+        const self = this;
+        return new AbstractLdapParser(function(input) {
+
+            let leftResult = self.$parse(input);
+            if (leftResult.success) return leftResult;
+            else return other.$parse(input)
+        })
+    },
+
+    $then: function(other) {
+
+        const self = this;
+        return new AbstractLdapParser(function(input) {
+
+            let leftResult = self.$parse(input);
+            if (leftResult.success) {
+
+                let rightResult = other.$parse(leftResult.input)
+                if (rightResult.success) {
+                    return {
+                        success: true,
+                        value: Seq(leftResult.value, rightResult.value)
+                    };
+                } else {
+                    return rightResult;
+                }
+            } else {
+                return leftResult;
+            }
+        });
+    }
+};
+
+
+
+
+
+
+
+
