@@ -170,6 +170,9 @@ const LdapGrammar = {
      <starval> ::= NULL | <value> '*' <starval>
      <final> ::= NULL | <value>
 
+
+        Grammar was taken from here
+        https://msdn.microsoft.com/en-us/library/windows/desktop/aa746475%28v=vs.85%29.aspx
      */
 
     filter: function() {
