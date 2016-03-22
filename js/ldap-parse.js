@@ -61,6 +61,7 @@ function AbstractLdapParser(impl) {
 }
 
 
+// TODO:  This stuff is not ready for use. It is just a sketch
 AbstractLdapParser.prototype = {
 
     $parse: function(input) {
@@ -70,40 +71,84 @@ AbstractLdapParser.prototype = {
     $or: function(other) {
 
         const self = this;
-        return new AbstractLdapParser(function(input) {
+        return function() {
 
-            let leftResult = self.$parse(input);
-            if (leftResult.success) return leftResult;
-            else return other.$parse(input)
-        })
+            return new AbstractLdapParser(function(input) {
+
+                let leftResult = self.$parse(input);
+                if (leftResult.success) return leftResult;
+                else return other().$parse(input)
+            });
+        }
     },
 
     $then: function(other) {
 
         const self = this;
-        return new AbstractLdapParser(function(input) {
 
-            let leftResult = self.$parse(input);
-            if (leftResult.success) {
+        return function() {
+            return new AbstractLdapParser(function(input) {
 
-                let rightResult = other.$parse(leftResult.input)
-                if (rightResult.success) {
-                    return {
-                        success: true,
-                        value: Seq(leftResult.value, rightResult.value)
-                    };
+                let leftResult = self.$parse(input);
+                if (leftResult.success) {
+
+                    let rightResult = other().$parse(leftResult.input)
+                    if (rightResult.success) {
+                        return {
+                            success: true,
+                            value: new Seq(leftResult.value, rightResult.value),
+                            input: rightResult.input
+                        };
+                    } else {
+                        return rightResult;
+                    }
                 } else {
-                    return rightResult;
+                    return leftResult;
                 }
-            } else {
-                return leftResult;
-            }
-        });
+            });
+        }
     }
 };
 
 
+const LdapGrammar = {
 
+    token: function(value, p) {
+
+        return new AbstractLdapParser(function(input) {
+
+            if (input.isEmpty()) {
+                return { success: false, error: "expected " + value };
+            } else {
+
+                var head = input.head();
+                if (p(head)) {
+                    return { success: true, value: head.value, input: input.tail() };
+                } else {
+                    return { success: false, error: "expected " + value };
+                }
+            }
+        });
+    },
+
+    key: function(value) {
+
+        return this.token(value, function(head) {
+           return head.type == "keyword";
+        });
+    },
+
+    iden: function() {
+
+        return this.token("identifier", function(head) {
+            return head.type == "identifier";
+        });
+    }
+
+
+
+
+};
 
 
 
