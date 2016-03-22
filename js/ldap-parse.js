@@ -143,11 +143,78 @@ const LdapGrammar = {
         return this.token("identifier", function(head) {
             return head.type == "identifier";
         });
+    },
+
+    // Grammar stuff. At the moment we support only subset of grammar
+    filter: function() {
+        return this.key("(").$then(this.filtercomp()).$then(this.key(")"));
+    },
+
+    filterlist: function() {
+        return this.filter().$or(this.filter().$then(this.filterlist()));
+    },
+
+    filtercomp: function() {
+        return this.and().$or(this.or()).$or(this.item());
+    },
+
+    and: function() {
+        return this.key("&").$then(this.filterlist());
+    },
+
+    or: function() {
+        return this.key("|").$then(this.filterlist());
+    },
+
+    item: function() {
+        return this.simple();
+    },
+    simple: function() {
+        return this.iden().$then(this.filtertype()).$then(this.iden());
+    },
+
+    filtertype: function() {
+        return this.equal().$or(this.approx()).$or(this.ge()).$or(this.le());
+    },
+
+    equal: function() {
+        return this.key("=");
+    },
+
+    approx: function() {
+        return this.key("~=");
+    },
+
+    ge: function() {
+        return this.key(">=");
+    },
+
+    le: function() {
+        return this.key("<=");
     }
 
+    /*
 
-
-
+     <filter> ::= '(' <filtercomp> ')'
+     <filtercomp> ::= <and> | <or> | <not> | <item>
+     <and> ::= '&' <filterlist>
+     <or> ::= '|' <filterlist>
+     <not> ::= '!' <filter>
+     <filterlist> ::= <filter> | <filter> <filterlist>
+     <item> ::= <simple> | <present> | <substring>
+     <simple> ::= <attr> <filtertype> <value>
+     <filtertype> ::= <equal> | <approx> | <ge> | <le>
+     <equal> ::= '='
+     <approx> ::= '~='
+     <ge> ::= '>='
+     <le> ::= '<='
+     <present> ::= <attr> '=*'
+     <substring> ::= <attr> '=' <initial> <any> <final>
+     <initial> ::= NULL | <value>
+     <any> ::= '*' <starval>
+     <starval> ::= NULL | <value> '*' <starval>
+     <final> ::= NULL | <value>
+     */
 };
 
 
