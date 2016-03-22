@@ -71,42 +71,36 @@ AbstractLdapParser.prototype = {
     $or: function(other) {
 
         const self = this;
-        return function() {
+        return new AbstractLdapParser(function(input) {
 
-            return new AbstractLdapParser(function(input) {
-
-                let leftResult = self.$parse(input);
-                if (leftResult.success) return leftResult;
-                else return other().$parse(input)
-            });
-        }
+            let leftResult = self.$parse(input);
+            if (leftResult.success) return leftResult;
+            else return other().$parse(input)
+        });
     },
 
     $then: function(other) {
 
         const self = this;
+        return new AbstractLdapParser(function(input) {
 
-        return function() {
-            return new AbstractLdapParser(function(input) {
+            let leftResult = self.$parse(input);
+            if (leftResult.success) {
 
-                let leftResult = self.$parse(input);
-                if (leftResult.success) {
-
-                    let rightResult = other().$parse(leftResult.input)
-                    if (rightResult.success) {
-                        return {
-                            success: true,
-                            value: new Seq(leftResult.value, rightResult.value),
-                            input: rightResult.input
-                        };
-                    } else {
-                        return rightResult;
-                    }
+                let rightResult = other().$parse(leftResult.input);
+                if (rightResult.success) {
+                    return {
+                        success: true,
+                        value: new Seq(leftResult.value, rightResult.value),
+                        input: rightResult.input
+                    };
                 } else {
-                    return leftResult;
+                    return rightResult;
                 }
-            });
-        }
+            } else {
+                return leftResult;
+            }
+        });
     }
 };
 
@@ -115,30 +109,37 @@ const LdapGrammar = {
 
     token: function(value, p) {
 
-        return new AbstractLdapParser(function(input) {
+        return function() {
 
-            if (input.isEmpty()) {
-                return { success: false, error: "expected " + value };
-            } else {
+            return new AbstractLdapParser(function(input) {
 
-                var head = input.head();
-                if (p(head)) {
-                    return { success: true, value: head.value, input: input.tail() };
-                } else {
+                if (input.isEmpty()) {
                     return { success: false, error: "expected " + value };
+                } else {
+
+                    var head = input.head();
+                    if (p(head)) {
+                        return { success: true, value: head.value, input: input.tail() };
+                    } else {
+                        return { success: false, error: "expected " + value };
+                    }
                 }
-            }
-        });
+            });
+        }
     },
 
-    key: function(value) {
+    begin: new AbstractLdapParser(function(input) {
+            return { success: true, value: "", input: input };
+    }),
+
+    keyword: function(value) {
 
         return this.token(value, function(head) {
            return head.type == "keyword";
         });
     },
 
-    iden: function() {
+    identifier: function() {
 
         return this.token("identifier", function(head) {
             return head.type == "identifier";
@@ -146,52 +147,6 @@ const LdapGrammar = {
     },
 
     // Grammar stuff. At the moment we support only subset of grammar
-    filter: function() {
-        return this.key("(").$then(this.filtercomp()).$then(this.key(")"));
-    },
-
-    filterlist: function() {
-        return this.filter().$or(this.filter().$then(this.filterlist()));
-    },
-
-    filtercomp: function() {
-        return this.and().$or(this.or()).$or(this.item());
-    },
-
-    and: function() {
-        return this.key("&").$then(this.filterlist());
-    },
-
-    or: function() {
-        return this.key("|").$then(this.filterlist());
-    },
-
-    item: function() {
-        return this.simple();
-    },
-    simple: function() {
-        return this.iden().$then(this.filtertype()).$then(this.iden());
-    },
-
-    filtertype: function() {
-        return this.equal().$or(this.approx()).$or(this.ge()).$or(this.le());
-    },
-
-    equal: function() {
-        return this.key("=");
-    },
-
-    approx: function() {
-        return this.key("~=");
-    },
-
-    ge: function() {
-        return this.key(">=");
-    },
-
-    le: function() {
-        return this.key("<=");
-    }
 
     /*
 
@@ -214,7 +169,56 @@ const LdapGrammar = {
      <any> ::= '*' <starval>
      <starval> ::= NULL | <value> '*' <starval>
      <final> ::= NULL | <value>
+
      */
+
+    filter: function() {
+        return this.begin.$then(this.keyword("(")).$then(this.filtercomp).$then(this.keyword(")"));
+    },
+
+    filtercomp: function() {
+        return this.begin.$then(this.and).$or(this.or).$or(this.item);
+    },
+
+    and: function() {
+        return this.begin.$then(this.keyword("&")).$then(this.filterlist);
+    },
+
+    or: function() {
+        return this.begin.$then(this.keyword("|")).$then(this.filterlist);
+    },
+
+    filterlist: function() {
+        return this.begin.$then(this.filter).$or(this.$().$then(this.filter).$then(this.filterlist));
+    },
+
+    item: function() {
+        return this.begin.$then(this.simple);
+    },
+
+    simple: function() {
+        return this.begin.$then(this.identifier()).$then(this.filtertype).$then(this.identifier());
+    },
+
+    filtertype: function() {
+        return this.begin.$then(this.equal).$or(this.approx).$or(this.ge).$or(this.le);
+    },
+
+    equal: function() {
+        return this.begin.$then(this.keyword("="));
+    },
+
+    approx: function() {
+        return this.begin.$then(this.keyword("~="));
+    },
+
+    ge: function() {
+        return this.begin.$then(this.keyword(">="));
+    },
+
+    le: function() {
+        return this.begin.$then(this.keyword("<="));
+    }
 };
 
 
