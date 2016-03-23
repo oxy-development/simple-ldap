@@ -132,7 +132,7 @@ const LdapGrammar = function() {
     function keyword(value) {
 
         return token(value, function(head) {
-           return head.type == "keyword";
+           return head.type === "keyword" && head.value === value;
         });
     }
     
