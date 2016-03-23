@@ -65,7 +65,7 @@ function AbstractLdapParser(impl) {
 AbstractLdapParser.prototype = {
 
     $parse: function(input) {
-        this.f.call(this, input);
+        return this.f.call(this, input);
     },
 
     $or: function(other) {
@@ -105,7 +105,7 @@ AbstractLdapParser.prototype = {
 };
 
 
-const LdapGrammar = function() {
+const LdapParser = function() {
 
     function token(value, p) {
 
@@ -138,7 +138,7 @@ const LdapGrammar = function() {
     
     function identifier() {
 
-        return this.token("identifier", function(head) {
+        return token("identifier", function(head) {
             return head.type == "identifier";
         });
     }
