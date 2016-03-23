@@ -52,7 +52,7 @@ function Seq(_1, _2) {
 
 /**
  *
- * @param impl is {function} which accepts input stream of tokens and returns some
+ * @param impl {function()} which accepts input stream of tokens and returns some
  * parse result.
  * @constructor
  */
@@ -105,51 +105,46 @@ AbstractLdapParser.prototype = {
 };
 
 
-const LdapGrammar = {
+const LdapGrammar = function() {
 
-    token: function(value, p) {
+    function token(value, p) {
 
         return function() {
 
             return new AbstractLdapParser(function(input) {
 
-                if (input.isEmpty()) {
-                    return { success: false, error: "expected " + value };
-                } else {
-
-                    var head = input.head();
-                    if (p(head)) {
-                        return { success: true, value: head.value, input: input.tail() };
-                    } else {
-                        return { success: false, error: "expected " + value };
-                    }
+                var result = { success: false, error: "expected " + value };
+                
+                if (!input.isEmpty() && p(input.head())) {
+                    result = { success: true, value: input.head().value, input: input.tail(), error: null };
                 }
+                return result;
             });
         }
-    },
+    }
 
-    begin: new AbstractLdapParser(function(input) {
+    // Grammar primitives
+    
+    const begin = new AbstractLdapParser(function(input) {
             return { success: true, value: "", input: input };
-    }),
+    });
+    
+    function keyword(value) {
 
-    keyword: function(value) {
-
-        return this.token(value, function(head) {
+        return token(value, function(head) {
            return head.type == "keyword";
         });
-    },
-
-    identifier: function() {
+    }
+    
+    function identifier() {
 
         return this.token("identifier", function(head) {
             return head.type == "identifier";
         });
-    },
-
-    // Grammar stuff. At the moment we support only subset of grammar
-
+    }
     /*
-
+     Grammar stuff. At the moment we support only subset of grammar
+    
      <filter> ::= '(' <filtercomp> ')'
      <filtercomp> ::= <and> | <or> | <not> | <item>
      <and> ::= '&' <filterlist>
@@ -174,55 +169,61 @@ const LdapGrammar = {
         Grammar was taken from here
         https://msdn.microsoft.com/en-us/library/windows/desktop/aa746475%28v=vs.85%29.aspx
      */
+    
+    /* Products */
+    var P = {
+        
+        filter: function() {
+            return begin.$then(keyword("(")).$then(P.filtercomp).$then(keyword(")"));
+        },
 
-    filter: function() {
-        return this.begin.$then(this.keyword("(")).$then(this.filtercomp).$then(this.keyword(")"));
-    },
+        filtercomp: function() {
+            return begin.$then(P.and).$or(P.or).$or(P.item);
+        },
 
-    filtercomp: function() {
-        return this.begin.$then(this.and).$or(this.or).$or(this.item);
-    },
+        and: function() {
+            return begin.$then(keyword("&")).$then(P.filterlist);
+        },
 
-    and: function() {
-        return this.begin.$then(this.keyword("&")).$then(this.filterlist);
-    },
+        or: function() {
+            return begin.$then(keyword("|")).$then(P.filterlist);
+        },
 
-    or: function() {
-        return this.begin.$then(this.keyword("|")).$then(this.filterlist);
-    },
+        filterlist: function() {
+            return begin.$then(P.filter).$or(begin.$then(P.filter).$then(P.filterlist));
+        },
 
-    filterlist: function() {
-        return this.begin.$then(this.filter).$or(this.$().$then(this.filter).$then(this.filterlist));
-    },
+        item: function() {
+            return begin.$then(P.simple);
+        },
 
-    item: function() {
-        return this.begin.$then(this.simple);
-    },
+        simple: function() {
+            return begin.$then(identifier()).$then(P.filtertype).$then(identifier());
+        },
 
-    simple: function() {
-        return this.begin.$then(this.identifier()).$then(this.filtertype).$then(this.identifier());
-    },
+        filtertype: function() {
+            return begin.$then(P.equal).$or(P.approx).$or(P.ge).$or(P.le);
+        },
 
-    filtertype: function() {
-        return this.begin.$then(this.equal).$or(this.approx).$or(this.ge).$or(this.le);
-    },
+        equal: function() {
+            return begin.$then(keyword("="));
+        },
 
-    equal: function() {
-        return this.begin.$then(this.keyword("="));
-    },
+        approx: function() {
+            return begin.$then(keyword("~="));
+        },
 
-    approx: function() {
-        return this.begin.$then(this.keyword("~="));
-    },
+        ge: function() {
+            return begin.$then(keyword(">="));
+        },
 
-    ge: function() {
-        return this.begin.$then(this.keyword(">="));
-    },
-
-    le: function() {
-        return this.begin.$then(this.keyword("<="));
-    }
-};
+        le: function() {
+            return begin.$then(keyword("<="));
+        }
+    };
+    
+    return P.filter();
+}();
 
 
 
