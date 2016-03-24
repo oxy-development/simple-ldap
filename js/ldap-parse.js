@@ -1,5 +1,5 @@
 
-"use strict";
+'use strict';
 
 
 /**
@@ -125,8 +125,8 @@ const LdapParser = function() {
 
     // Grammar primitives
     
-    const begin = new AbstractLdapParser(function(input) {
-            return { success: true, value: "", input: input };
+    const nothing = new AbstractLdapParser(function(input) {
+            return { success: false, error: "Nothing case" };
     });
     
     function keyword(value) {
@@ -174,58 +174,54 @@ const LdapParser = function() {
     var P = {
         
         filter: function() {
-            return begin.$then(keyword("(")).$then(P.filtercomp).$then(keyword(")"));
+            return nothing.$or(keyword("(")).$then(P.filtercomp).$then(keyword(")"));
         },
 
         filtercomp: function() {
-            return begin.$then(P.and).$or(P.or).$or(P.item);
+            return nothing.$or(P.and).$or(P.or).$or(P.item);
         },
 
         and: function() {
-            return begin.$then(keyword("&")).$then(P.filterlist);
+            return nothing.$or(keyword("&")).$then(P.filterlist);
         },
 
         or: function() {
-            return begin.$then(keyword("|")).$then(P.filterlist);
+            return nothing.$or(keyword("|")).$then(P.filterlist);
         },
 
         filterlist: function() {
-            return begin.$then(P.filter).$or(begin.$then(P.filter).$then(P.filterlist));
+            return nothing.$or(P.filter).$or(nothing.$or(P.filter).$then(P.filterlist));
         },
 
         item: function() {
-            return begin.$then(P.simple);
+            return P.simple();
         },
 
         simple: function() {
-            return begin.$then(identifier()).$then(P.filtertype).$then(identifier());
+            return nothing.$or(identifier()).$then(P.filtertype).$then(identifier());
         },
 
         filtertype: function() {
-            return begin.$then(P.equal).$or(P.approx).$or(P.ge).$or(P.le);
+            return nothing.$or(P.equal).$or(P.approx).$or(P.ge).$or(P.le);
         },
-
+        
         equal: function() {
-            return begin.$then(keyword("="));
+            return keyword("=")();
         },
 
         approx: function() {
-            return begin.$then(keyword("~="));
+            return keyword("~=")();
         },
 
         ge: function() {
-            return begin.$then(keyword(">="));
+            return keyword(">=")();
         },
-
+        
         le: function() {
-            return begin.$then(keyword("<="));
+            return keyword("<=")();
         }
     };
     
     return P.filter();
+    
 }();
-
-
-
-
-
