@@ -50,6 +50,29 @@ function Seq(_1, _2) {
 }
 
 
+Seq.prototype = {
+    
+    /**
+     * Tree structure equality check
+     * @param that {object} to be compared with
+     */
+    equals: function(that) {
+        
+        if (that instanceof Seq) {
+        
+            function eq(left, right) {
+                return (left instanceof Seq ? left.equals(right) : left === right);
+            }
+            
+            return eq(this._1, that._1) && eq(this._2, that._2)
+        } else {
+            return false;
+        }
+    } 
+};
+
+
+
 /**
  *
  * @param impl {function()} which accepts input stream of tokens and returns some

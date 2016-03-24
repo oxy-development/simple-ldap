@@ -10,7 +10,7 @@ QUnit.test("LDAP Parser smoke test", function(assert) {
         { type: "keyword", value: ")" }
     ]);
 
-
+    const expected = Seq(Seq("(", Seq(Seq("objectName", "="), "someObjectName")), ")")
     const result = LdapParser.$parse(stream);
-    assert.ok(result.success, "Parser exit: " + JSON.stringify(result.value));
+    assert.ok(result.success && result.value.equals(expected), "Parser exit: " + JSON.stringify(result.value));
 });
