@@ -44,9 +44,9 @@ StreamWrapper.prototype = {
 };
 
 
-function Seq(_1, _2) {
-    this._1 = _1;
-    this._2 = _2;
+function Seq(val1_, val2_) {
+    this._1 = val1_;
+    this._2 = val2_;
 }
 
 
@@ -136,7 +136,7 @@ const LdapParser = function() {
 
             return new AbstractLdapParser(function(input) {
 
-                var result = { success: false, error: "expected " + value };
+                var result = { success: false, error: "expected " + value, input: input };
                 
                 if (!input.isEmpty() && p(input.head())) {
                     result = { success: true, value: input.head().value, input: input.tail(), error: null };
@@ -213,7 +213,11 @@ const LdapParser = function() {
         },
 
         filterlist: function() {
-            return nothing.$or(P.filter).$or(nothing.$or(P.filter).$then(P.filterlist));
+            return nothing.$or(P.filterlistSeq).$or(P.filter);
+        },
+        
+        filterlistSeq: function() {
+            return nothing.$or(P.filter).$then(P.filterlist);
         },
 
         item: function() {
