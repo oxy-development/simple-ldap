@@ -6,7 +6,7 @@ QUnit.test("Tokenizer simple parse", function(assert) {
     var accum = [];
     while(true) {
         
-        var result = tkn.next()
+        var result = tkn.next();
         if (result.done) {
             break;
         }
@@ -29,7 +29,7 @@ QUnit.test("LdapParser::$parse the simplest filter", function(assert) {
         { type: "keyword", value: ")" }
     ]);
     
-    const expected = new Seq(new Seq("(", new Seq(new Seq("objectName", "="), "someObjectName")), ")");
+    const expected = new Tree(new Tree("(", new Tree(new Tree("objectName", "="), "someObjectName")), ")");
     const result = LdapParser.$parse(stream);
     assert.ok(result.success && result.value.equals(expected), "Parser exit: " + JSON.stringify(result.value));
 });

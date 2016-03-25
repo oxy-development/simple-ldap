@@ -45,7 +45,8 @@ StreamWrapper.prototype = {
 
 
 /**
- * Naive tokenizer implementation
+ * Naive token generator
+ * @param str {string} to be decomposed into stream of tokens
  */
 function* tokenizer(str) {
     
@@ -60,11 +61,10 @@ function* tokenizer(str) {
     let identifier=false;
     let accumulator=[];
     
-    for (let i=0, len = str.length ; i < len; i++) {
+    for (let i = 0, len = str.length ; i < len; i++) {
         
         switch (str[i]) {
-            
-            
+
             case '(': case ')': case '=': case '&': case '|': case '!': case '~': case '>': case '<': 
                 
                 if (identifier) {
@@ -93,9 +93,10 @@ function* tokenizer(str) {
                         yield newKeyword(str[i]);
                         break;
                 }
+                break;
             default:
                 
-                identifier=true;
+                identifier = true;
                 accumulator.push(str[i]);
                 break;
         }
@@ -104,29 +105,27 @@ function* tokenizer(str) {
 
 
 /**
- * TODO: rename
- * Tuple
+ * Tree
  */
-function Seq(val1_, val2_) {
+function Tree(val1_, val2_) {
     this._1 = val1_;
     this._2 = val2_;
 }
 
 
-Seq.prototype = {
+Tree.prototype = {
     
     /**
      * Tree structure equality check
      * @param that {object} to be compared with
      */
     equals: function(that) {
-        
-        if (that instanceof Seq) {
-        
-            function eq(left, right) {
-                return (left instanceof Seq ? left.equals(right) : left === right);
-            }
-            
+
+        function eq(left, right) {
+            return (left instanceof Tree ? left.equals(right) : left === right);
+        }
+
+        if (that instanceof Tree) {
             return eq(this._1, that._1) && eq(this._2, that._2)
         } else {
             return false;
@@ -177,7 +176,7 @@ AbstractLdapParser.prototype = {
                 if (rightResult.success) {
                     return {
                         success: true,
-                        value: new Seq(leftResult.value, rightResult.value),
+                        value: new Tree(leftResult.value, rightResult.value),
                         input: rightResult.input
                     };
                 } else {
@@ -211,8 +210,8 @@ const LdapParser = function() {
 
     // Grammar primitives
     
-    const nothing = new AbstractLdapParser(function(input) {
-            return { success: false, error: "Nothing case" };
+    const nothing = new AbstractLdapParser(function() {
+        return { success: false, error: "Nothing case" };
     });
     
     function keyword(value) {
