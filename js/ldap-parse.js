@@ -44,6 +44,69 @@ StreamWrapper.prototype = {
 };
 
 
+/**
+ * Naive tokenizer implementation
+ */
+function* tokenizer(str) {
+    
+    function newKeyword(kw) {
+        return { type: "keyword", value: kw };
+    }
+    
+    function newIdentifier(value) {
+        return { type: "identifier", value: value };
+    }
+    
+    let identifier=false;
+    let accumulator=[];
+    
+    for (let i=0, len = str.length ; i < len; i++) {
+        
+        switch (str[i]) {
+            
+            
+            case '(': case ')': case '=': case '&': case '|': case '!': case '~': case '>': case '<': 
+                
+                if (identifier) {
+                    identifier = false;
+                    let ni = accumulator.join('');
+                    accumulator = [];
+                    yield newIdentifier(ni);
+                }
+                
+                switch (str[i]) {
+                    
+                    // Compound keywords
+                    case '~': case '>': case '<':
+                         
+                        let nextI = i + 1;
+                        if (nextI < len && str[nextI] === "=" ) {
+                            yield newKeyword(str[i] + str[nextI]);
+                            i++;
+                        } else {
+                            throw new Error("Unexpected token " + str[i] + " at position " + i + ".");  
+                        }
+                        break;
+                
+                    // Single char keywords
+                    default:
+                        yield newKeyword(str[i]);
+                        break;
+                }
+            default:
+                
+                identifier=true;
+                accumulator.push(str[i]);
+                break;
+        }
+    }
+}
+
+
+/**
+ * TODO: rename
+ * Tuple
+ */
 function Seq(val1_, val2_) {
     this._1 = val1_;
     this._2 = val2_;
@@ -249,6 +312,5 @@ const LdapParser = function() {
         }
     };
     
-    return P.filter();
-    
+    return P.filter(); 
 }();

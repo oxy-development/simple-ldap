@@ -1,3 +1,24 @@
+
+QUnit.test("Tokenizer simple parse", function(assert) {
+    
+    var tkn = tokenizer("(&(abc=def)(zxy=oph))")
+    
+    var accum = [];
+    while(true) {
+        
+        var result = tkn.next()
+        if (result.done) {
+            break;
+        }
+        
+        accum.push(result.value);
+    }
+    
+    
+    assert.ok(true, JSON.stringify(accum));
+});
+
+
 QUnit.test("LdapParser::$parse the simplest filter", function(assert) {
 
     var stream = StreamWrapper.fromArray([
