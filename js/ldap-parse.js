@@ -1,47 +1,4 @@
-
 'use strict';
-
-
-/**
- * Stream wrapper for {Array} object
- * @param data
- * @param data.array array to be wrapped
- * @param data.pos current position to be used
- * @constructor
- */
-function StreamWrapper(data) {
-    this.array = data.array;
-    this.pos = data.pos;
-}
-
-
-StreamWrapper.fromArray = function(array) {
-    return new StreamWrapper({ pos: 0, array: array });
-};
-
-
-StreamWrapper.prototype = {
-
-    isEmpty: function() { return this.pos >= this.array.length; },
-
-    head: function() {
-        if(this.isEmpty()) {
-            throw new Error("StreamWrapper is empty")
-        }
-        return this.array[this.pos];
-    },
-
-    tail: function() {
-
-        if(this.isEmpty()) {
-            throw new Error("StreamWrapper is empty")
-        }
-        return new StreamWrapper({
-            array: this.array,
-            pos: this.pos + 1
-        });
-    }
-};
 
 
 /**
@@ -55,7 +12,7 @@ function* tokenizer(str) {
     }
     
     function newIdentifier(value) {
-        return { type: "identifier", value: value };
+        return { type: "identifier", value: value.trim() };
     }
     
     let identifier=false;
@@ -105,6 +62,53 @@ function* tokenizer(str) {
 
 
 /**
+ * Stream wrapper for {Array} object
+ * @param data
+ * @param data.array array to be wrapped
+ * @param data.pos current position to be used
+ * @constructor
+ */
+function StreamWrapper(data) {
+    this.array = data.array;
+    this.pos = data.pos;
+}
+
+
+/**
+ * Produces immutable stream from array object
+ * @param array
+ * @returns {StreamWrapper}
+ */
+StreamWrapper.fromArray = function(array) {
+    return new StreamWrapper({ pos: 0, array: array.slice() });
+};
+
+
+StreamWrapper.prototype = {
+
+    isEmpty: function() { return this.pos >= this.array.length; },
+
+    head: function() {
+        if(this.isEmpty()) {
+            throw new Error("StreamWrapper is empty")
+        }
+        return this.array[this.pos];
+    },
+
+    tail: function() {
+
+        if(this.isEmpty()) {
+            throw new Error("StreamWrapper is empty")
+        }
+        return new StreamWrapper({
+            array: this.array,
+            pos: this.pos + 1
+        });
+    }
+};
+
+
+/**
  * Tree
  */
 function Tree(val1_, val2_) {
@@ -130,9 +134,8 @@ Tree.prototype = {
         } else {
             return false;
         }
-    } 
+    }
 };
-
 
 
 /**
@@ -198,7 +201,7 @@ const LdapParser = function() {
 
             return new AbstractLdapParser(function(input) {
 
-                var result = { success: false, error: "expected " + value, input: input };
+                let result = { success: false, error: "expected " + value, input: input };
                 
                 if (!input.isEmpty() && p(input.head())) {
                     result = { success: true, value: input.head().value, input: input.tail(), error: null };
@@ -208,8 +211,7 @@ const LdapParser = function() {
         }
     }
 
-    // Grammar primitives
-    
+    /* Grammar primitive */
     const nothing = new AbstractLdapParser(function() {
         return { success: false, error: "Nothing case" };
     });
@@ -227,6 +229,7 @@ const LdapParser = function() {
             return head.type == "identifier";
         });
     }
+
     /*
      Grammar stuff. At the moment we support only subset of grammar
     
