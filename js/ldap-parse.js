@@ -189,6 +189,25 @@ AbstractLdapParser.prototype = {
                 return leftResult;
             }
         });
+    },
+
+    $map: function(f) {
+
+        const self = this;
+        return new AbstractLdapParser(function (input) {
+
+            let result = self.$parse(input);
+            if (result.success) {
+
+                result = {
+                    success: true,
+                    value: f.call(self, result.value),
+                    input: result.input
+                };
+            }
+
+            return result;
+        });
     }
 };
 
