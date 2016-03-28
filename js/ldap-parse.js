@@ -156,6 +156,21 @@ AbstractLdapParser.prototype = {
         return this.f.call(this, input);
     },
 
+    /**
+     * Produces parser which always succeeds
+     * @param value result of successful parser
+     * @returns {AbstractLdapParser} which always succeeds
+     */
+    success: function(value) {
+        return new AbstractLdapParser(function(input) {
+            return {
+                success: true,
+                value: value,
+                input: input
+            }
+        });
+    },
+
     $or: function(other) {
 
         const self = this;
@@ -191,7 +206,13 @@ AbstractLdapParser.prototype = {
         });
     },
 
-    $map: function(f) {
+
+    /**
+     * Transforms Parser Parser[A] to Parser[B]
+     * @param f a function A -> B
+     * @returns {AbstractLdapParser}
+     */
+    map: function(f) {
 
         const self = this;
         return new AbstractLdapParser(function (input) {
@@ -208,6 +229,23 @@ AbstractLdapParser.prototype = {
 
             return result;
         });
+    },
+
+
+    /**
+     * Produces new parser object which represents sequence
+     * @return {AbstractLdapParser}
+     */
+    times: function() {
+
+        const self = this;
+        self.$then(function() { return self.times(); })
+            .map(function(p) {
+
+                if (p instanceof Tree) { return [p._1, p._2]; }
+                else { throw new Error("Come up with some idea") }
+            })
+            .$or(function() { return self.success([]); });
     }
 };
 
