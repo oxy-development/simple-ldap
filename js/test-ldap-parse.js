@@ -87,44 +87,65 @@ QUnit.test("Token generator test - 2", function(assert) {
 });
 
 
-QUnit.test("LdapParser::$parse the simplest filter", function(assert) {
+QUnit.test("LdapParser::parse the simplest filter", function(assert) {
 
-    var stream = StreamWrapper.fromArray([
-        { type: "keyword", value: "(" },
-        { type: "identifier", value: "objectName" },
-        { type: "keyword", value: "=" },
-        { type: "identifier", value: "someObjectName" },
-        { type: "keyword", value: ")" }
-    ]);
+    assert.ok(
+        function() {
+            const strQuery = "(objectName=someObjectName)";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
+        },
+        "Test filter by '='"
+    );
 
-    const result = LdapParser.$parse(stream);
-    assert.ok(result.success, "Parser exit: " + JSON.stringify(result.value));
+    assert.ok(
+        function() {
+            const strQuery = "(objectName~=someObjectName)";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
+        },
+        "Test filter by '~='"
+    );
+
+    assert.ok(
+        function() {
+            const strQuery = "(objectName>=someObjectName)";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
+        },
+        "Test filter by '>='"
+    );
+
+    assert.ok(
+        function() {
+            const strQuery = "(objectName<=someObjectName)";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
+        },
+        "Test filter by '<='"
+    );
 });
 
 
-QUnit.test("LdapParser::$parse two combined items", function(assert) {
-    
-    var stream = StreamWrapper.fromArray([
-        
-        { type: "keyword", value: "(" },
-        { type: "keyword", value: "&" },
-            { type: "keyword", value: "(" },
-            { type: "identifier", value: "objectName" },
-            { type: "keyword", value: "=" },
-            { type: "identifier", value: "someObjectName" },
-            { type: "keyword", value: ")" },
-            { type: "keyword", value: "(" },
-            { type: "identifier", value: "objectType" },
-            { type: "keyword", value: "=" },
-            { type: "identifier", value: "someObjectType" },
-            { type: "keyword", value: ")" },
-        { type: "keyword", value: ")" }
-    ]);
-    
-    
-    const result = LdapParser.$parse(stream);
-    
-    assert.ok(result.success, "Parser exit: " + JSON.stringify(result));
+QUnit.test("LdapParser::parse two combined items", function(assert) {
+
+    assert.ok(
+        function() {
+
+            const strQuery = "(&(objectName=someObjectName)(objectType=someObjectType))";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value.toString() === strQuery;
+        }(), "Two items connected through &"
+    );
+
+    assert.ok(
+        function() {
+
+            const strQuery = "(|(objectName=someObjectName)(objectType=someObjectType))";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value.toString() === strQuery;
+        }(), "Two items connected through |"
+    );
 });
 
 // TODO: We need tokenizer :)

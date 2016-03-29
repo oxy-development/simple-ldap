@@ -202,6 +202,16 @@ AbstractLdapParser.Success = function(value) {
 // TODO:  This stuff is not ready for use. It is just a sketch
 AbstractLdapParser.prototype = {
 
+    /**
+     *
+     * @param str
+     */
+    parse: function(str) {
+
+        var stream = StreamWrapper.fromArray(Array.from(tokenizer(str)));
+        return this.$parse(stream);
+    },
+
     $parse: function(input) {
         return this.f.call(this, input);
     },
