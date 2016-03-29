@@ -176,7 +176,7 @@ Tree.toLdapFilter = function(tree) {
  * parse result.
  * @constructor
  */
-function AbstractLdapParser(impl) {
+function AbstractParser(impl) {
     this.f = impl;
 }
 
@@ -184,11 +184,11 @@ function AbstractLdapParser(impl) {
 /**
  * Produces parser which always succeeds
  * @param value result of successful parser
- * @returns {AbstractLdapParser} which always succeeds
+ * @returns {AbstractParser} which always succeeds
  */
-AbstractLdapParser.Success = function(value) {
+AbstractParser.Success = function(value) {
 
-    return new AbstractLdapParser(function(input) {
+    return new AbstractParser(function(input) {
 
         return {
             success: true,
@@ -199,12 +199,26 @@ AbstractLdapParser.Success = function(value) {
 };
 
 
-// TODO:  This stuff is not ready for use. It is just a sketch
-AbstractLdapParser.prototype = {
+AbstractParser.prototype = {
 
     /**
+     * Tries to parse given string value to any implementation of {LdapSyntaxEntryTrait}
+     * @param str {string} string query
+     * @return parse result.
      *
-     * @param str
+     *   It could be successful:
+     *   {
+     *       success: true,
+     *       value: {LdapFilterList},
+     *       input: {StreamWrapper}
+     *   }
+     *
+     *   ... or it could be failure:
+     *   {
+     *       success: false,
+     *       error: "Error message goes here",
+     *       input: {StreamWrapper}
+     *   }
      */
     parse: function(str) {
 
@@ -219,7 +233,7 @@ AbstractLdapParser.prototype = {
     $or: function(other) {
 
         const self = this;
-        return new AbstractLdapParser(function(input) {
+        return new AbstractParser(function(input) {
 
             let leftResult = self.$parse(input);
             if (leftResult.success) return leftResult;
@@ -230,7 +244,7 @@ AbstractLdapParser.prototype = {
     $then: function(other) {
 
         const self = this;
-        return new AbstractLdapParser(function(input) {
+        return new AbstractParser(function(input) {
 
             let leftResult = self.$parse(input);
             if (leftResult.success) {
@@ -255,12 +269,12 @@ AbstractLdapParser.prototype = {
     /**
      * Transforms Parser Parser[A] to Parser[B]
      * @param f a function A -> B
-     * @returns {AbstractLdapParser}
+     * @returns {AbstractParser}
      */
     map: function(f) {
 
         const self = this;
-        return new AbstractLdapParser(function (input) {
+        return new AbstractParser(function (input) {
 
             let result = self.$parse(input);
             if (result.success) {
@@ -278,8 +292,8 @@ AbstractLdapParser.prototype = {
 
 
     /**
-     * Produces new parser object which represents sequence
-     * @return {AbstractLdapParser}
+     * Produces new parser which results {Array} value
+     * @return {AbstractParser}
      */
     times: function() {
 
@@ -292,7 +306,7 @@ AbstractLdapParser.prototype = {
                 }
                 else { throw new Error("Come up with some idea") }
             })
-            .$or(function() { return AbstractLdapParser.Success([]); });
+            .$or(function() { return AbstractParser.Success([]); });
     }
 };
 
@@ -303,7 +317,7 @@ const LdapParser = function() {
 
         return function() {
 
-            return new AbstractLdapParser(function(input) {
+            return new AbstractParser(function(input) {
 
                 let result = { success: false, error: "expected " + value, input: input };
                 
@@ -316,7 +330,7 @@ const LdapParser = function() {
     }
 
     /* Grammar primitives */
-    const nothing = new AbstractLdapParser(function() {
+    const nothing = new AbstractParser(function() {
         return { success: false, error: "Nothing case" };
     });
     
