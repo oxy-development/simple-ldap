@@ -138,6 +138,38 @@ Tree.prototype = {
 };
 
 
+Tree.toLdapFilterList = function(tree) {
+    return new LdapFilterList(tree._1, tree._2);
+};
+
+
+Tree.toLdapItem = function(tree) {
+
+    return new LdapItem({
+        attr: tree._1._1,
+        filtertype: tree._1._2,
+        value: tree._2
+    });
+};
+
+
+Tree.toLdapFilter = function(tree) {
+
+    /*
+     Expected structure of ${tree}:
+
+            value
+          /       \
+      ___/_       ')'
+     /     \
+     '('  ${filter}
+
+     */
+
+    return tree._1._2;
+};
+
+
 /**
  *
  * @param impl {function()} which accepts input stream of tokens and returns some
@@ -245,7 +277,9 @@ AbstractLdapParser.prototype = {
         return self.$then(function() { return self.times(); })
             .map(function(p) {
 
-                if (p instanceof Tree) { return [p._1, p._2]; }
+                if (p instanceof Tree) {
+                    return [p._1].concat(p._2)
+                }
                 else { throw new Error("Come up with some idea") }
             })
             .$or(function() { return AbstractLdapParser.Success([]); });
@@ -271,7 +305,7 @@ const LdapParser = function() {
         }
     }
 
-    /* Grammar primitive */
+    /* Grammar primitives */
     const nothing = new AbstractLdapParser(function() {
         return { success: false, error: "Nothing case" };
     });
@@ -295,7 +329,9 @@ const LdapParser = function() {
     var P = {
         
         filter: function() {
-            return nothing.$or(keyword("(")).$then(P.filtercomp).$then(keyword(")"));
+
+            return nothing.$or(keyword("(")).$then(P.filtercomp).$then(keyword(")"))
+                .map(Tree.toLdapFilter);
         },
 
         filtercomp: function() {
@@ -303,11 +339,13 @@ const LdapParser = function() {
         },
 
         and: function() {
-            return nothing.$or(keyword("&")).$then(P.filterlist);
+            return nothing.$or(keyword("&")).$then(P.filterlist)
+                .map(Tree.toLdapFilterList);
         },
 
         or: function() {
-            return nothing.$or(keyword("|")).$then(P.filterlist);
+            return nothing.$or(keyword("|")).$then(P.filterlist)
+                .map(Tree.toLdapFilterList);
         },
 
         filterlist: function() {
@@ -317,19 +355,10 @@ const LdapParser = function() {
         
         filterlistSeq: function() {
             return P.filter().times();
-            //return nothing.$or(P.filter).$then(P.filterlist);
         },
 
         item: function() {
-
-            return P.simple().map(function(result) {
-
-                return new LdapItem({
-                    attr: result._1._1,
-                    filtertype: result._1._2,
-                    value: result._2
-                });
-            }) ;
+            return P.simple().map(Tree.toLdapItem);
         },
 
         simple: function() {
