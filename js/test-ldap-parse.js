@@ -148,5 +148,44 @@ QUnit.test("LdapParser::parse two combined items", function(assert) {
     );
 });
 
-// TODO: We need tokenizer :)
+
+QUnit.test("LdapParser::parse filter list of one element", function(assert) {
+
+    assert.ok(
+        function() {
+            const strQuery = "(&(objectName=someObjectName))";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value.toString() === strQuery;
+        }(), "Single item connected through &"
+    );
+
+    assert.ok(
+        function() {
+            const strQuery = "(|(objectName=someObjectName))";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value.toString() === strQuery;
+        }(), "Single item connected through |"
+    );
+});
+
+
+QUnit.test("LdapParse::parse filter list with nested filter list", function(assert) {
+
+    assert.ok(
+        function() {
+            const strQuery = "(|(objectName=someObjectName)(&(otherObject=someOtherObject)))";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value.toString() === strQuery;
+        }(), "One nested filter list"
+    );
+
+    assert.ok(
+        function() {
+            const strQuery = "(|(objectName=someObjectName)(&(otherObject=someOtherObject)(|(objectName=someObjectName))))";
+            const result = LdapParser.parse(strQuery);
+            return result.success && result.value.toString() === strQuery;
+        }(), "One nested filter with one nested filter"
+    );
+});
+
 // TODO: Put some tests here
