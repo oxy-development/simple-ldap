@@ -1,0 +1,27 @@
+/*
+     Grammar stuff. At the moment we support only subset of grammar
+
+     <filter> ::= '(' <filtercomp> ')'
+     <filtercomp> ::= <and> | <or> | <not> | <item>
+     <and> ::= '&' <filterlist>
+     <or> ::= '|' <filterlist>
+     <not> ::= '!' <filter>
+     <filterlist> ::= <filter> | <filter> <filterlist>
+     <item> ::= <simple> | <present> | <substring>
+     <simple> ::= <attr> <filtertype> <value>
+     <filtertype> ::= <equal> | <approx> | <ge> | <le>
+     <equal> ::= '='
+     <approx> ::= '~='
+     <ge> ::= '>='
+     <le> ::= '<='
+     <present> ::= <attr> '=*'
+     <substring> ::= <attr> '=' <initial> <any> <final>
+     <initial> ::= NULL | <value>
+     <any> ::= '*' <starval>
+     <starval> ::= NULL | <value> '*' <starval>
+     <final> ::= NULL | <value>
+
+
+        Grammar was taken from here
+        https://msdn.microsoft.com/en-us/library/windows/desktop/aa746475%28v=vs.85%29.aspx
+*/

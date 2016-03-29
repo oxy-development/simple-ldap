@@ -149,26 +149,29 @@ function AbstractLdapParser(impl) {
 }
 
 
+/**
+ * Produces parser which always succeeds
+ * @param value result of successful parser
+ * @returns {AbstractLdapParser} which always succeeds
+ */
+AbstractLdapParser.Success = function(value) {
+
+    return new AbstractLdapParser(function(input) {
+
+        return {
+            success: true,
+            value: value,
+            input: input
+        }
+    });
+};
+
+
 // TODO:  This stuff is not ready for use. It is just a sketch
 AbstractLdapParser.prototype = {
 
     $parse: function(input) {
         return this.f.call(this, input);
-    },
-
-    /**
-     * Produces parser which always succeeds
-     * @param value result of successful parser
-     * @returns {AbstractLdapParser} which always succeeds
-     */
-    success: function(value) {
-        return new AbstractLdapParser(function(input) {
-            return {
-                success: true,
-                value: value,
-                input: input
-            }
-        });
     },
 
     $or: function(other) {
@@ -239,13 +242,13 @@ AbstractLdapParser.prototype = {
     times: function() {
 
         const self = this;
-        self.$then(function() { return self.times(); })
+        return self.$then(function() { return self.times(); })
             .map(function(p) {
 
                 if (p instanceof Tree) { return [p._1, p._2]; }
                 else { throw new Error("Come up with some idea") }
             })
-            .$or(function() { return self.success([]); });
+            .$or(function() { return AbstractLdapParser.Success([]); });
     }
 };
 
@@ -287,34 +290,7 @@ const LdapParser = function() {
         });
     }
 
-    /*
-     Grammar stuff. At the moment we support only subset of grammar
-    
-     <filter> ::= '(' <filtercomp> ')'
-     <filtercomp> ::= <and> | <or> | <not> | <item>
-     <and> ::= '&' <filterlist>
-     <or> ::= '|' <filterlist>
-     <not> ::= '!' <filter>
-     <filterlist> ::= <filter> | <filter> <filterlist>
-     <item> ::= <simple> | <present> | <substring>
-     <simple> ::= <attr> <filtertype> <value>
-     <filtertype> ::= <equal> | <approx> | <ge> | <le>
-     <equal> ::= '='
-     <approx> ::= '~='
-     <ge> ::= '>='
-     <le> ::= '<='
-     <present> ::= <attr> '=*'
-     <substring> ::= <attr> '=' <initial> <any> <final>
-     <initial> ::= NULL | <value>
-     <any> ::= '*' <starval>
-     <starval> ::= NULL | <value> '*' <starval>
-     <final> ::= NULL | <value>
 
-
-        Grammar was taken from here
-        https://msdn.microsoft.com/en-us/library/windows/desktop/aa746475%28v=vs.85%29.aspx
-     */
-    
     /* Products */
     var P = {
         
@@ -335,15 +311,25 @@ const LdapParser = function() {
         },
 
         filterlist: function() {
+
             return nothing.$or(P.filterlistSeq).$or(P.filter);
         },
         
         filterlistSeq: function() {
-            return nothing.$or(P.filter).$then(P.filterlist);
+            return P.filter().times();
+            //return nothing.$or(P.filter).$then(P.filterlist);
         },
 
         item: function() {
-            return P.simple();
+
+            return P.simple().map(function(result) {
+
+                return new LdapItem({
+                    attr: result._1._1,
+                    filtertype: result._1._2,
+                    value: result._2
+                });
+            }) ;
         },
 
         simple: function() {
