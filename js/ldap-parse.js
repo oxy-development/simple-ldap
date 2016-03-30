@@ -154,18 +154,6 @@ Tree.toLdapItem = function(tree) {
 
 
 Tree.toLdapFilter = function(tree) {
-
-    /*
-     Expected structure of ${tree}:
-
-            value
-          /       \
-      ___/_       ')'
-     /     \
-     '('  ${filter}
-
-     */
-
     return tree._1._2;
 };
 
@@ -427,3 +415,6 @@ const LdapParser = function() {
     
     return P.filter(); 
 }();
+
+
+
