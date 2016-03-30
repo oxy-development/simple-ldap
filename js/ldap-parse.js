@@ -229,7 +229,14 @@ AbstractParser.prototype = {
     $parse: function(input) {
         return this.f.call(this, input);
     },
-
+    
+    
+    /**
+     * Combines `this` as AbstractParser[A] and result of `other` function which is AbstractParser[B] into AbstractParser[A | B] which
+     * can produce value of type A, value of type B or failure.
+     * @param other {function} which produces some AbstractParser[B] i.e. () -> AbstractParser[B]
+     * @returns {AbstractParser}
+     */
     $or: function(other) {
 
         const self = this;
@@ -241,6 +248,14 @@ AbstractParser.prototype = {
         });
     },
 
+
+    /**
+     * Combines `this` as AbstractParser[A] and result of `other` function which is AbstractParser[B] into AbstractParser[A ~ B] which
+     * produces composite type `A ~ B`. it will succeed if both parsers succeeded on given input. Composite type is pepresented by {Tree}
+     * object. 
+     * @param other {function} which produces some AbstractParser[B] i.e. () -> AbstractParser[B]
+     * @returns {AbstractParser}
+     */
     $then: function(other) {
 
         const self = this;
@@ -267,7 +282,7 @@ AbstractParser.prototype = {
 
 
     /**
-     * Transforms Parser Parser[A] to Parser[B]
+     * Transforms `this` as AbstractParser[A] to AbstractParser[B]
      * @param f a function A -> B
      * @returns {AbstractParser}
      */
@@ -292,7 +307,7 @@ AbstractParser.prototype = {
 
 
     /**
-     * Produces new parser which results {Array} value
+     * Transforms `this` as AbstractParser[A] to AbstractParser[Array[A]]
      * @return {AbstractParser}
      */
     times: function() {
