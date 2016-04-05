@@ -24,33 +24,33 @@
 
                 case '(': case ')': case '=': case '&': case '|': case '!': case '~': case '>': case '<':
 
-                if (identifier) {
-                    identifier = false;
-                    let ni = accumulator.join('');
-                    accumulator = [];
-                    yield newIdentifier(ni);
-                }
+                    if (identifier) {
+                        identifier = false;
+                        let ni = accumulator.join('');
+                        accumulator = [];
+                        yield newIdentifier(ni);
+                    }
 
-                switch (str[i]) {
+                    switch (str[i]) {
 
-                    // Compound keywords
-                    case '~': case '>': case '<':
+                        // Compound keywords
+                        case '~': case '>': case '<':
 
-                    let nextI = i + 1;
-                    if (nextI < len && str[nextI] === "=" ) {
-                        yield newKeyword(str[i] + str[nextI]);
-                        i++;
-                    } else {
-                        throw new Error("Unexpected token " + str[i] + " at position " + i + ".");
+                        let nextI = i + 1;
+                        if (nextI < len && str[nextI] === "=" ) {
+                            yield newKeyword(str[i] + str[nextI]);
+                            i++;
+                        } else {
+                            throw new Error("Unexpected token " + str[i] + " at position " + i + ".");
+                        }
+                        break;
+
+                        // Single char keywords
+                        default:
+                            yield newKeyword(str[i]);
+                            break;
                     }
                     break;
-
-                    // Single char keywords
-                    default:
-                        yield newKeyword(str[i]);
-                        break;
-                }
-                break;
                 default:
 
                     identifier = true;
@@ -109,27 +109,27 @@
 
 
     /**
-     * Tree
+     * Tuple
      */
-    function Tree(val1_, val2_) {
+    function Tuple(val1_, val2_) {
         this._1 = val1_;
         this._2 = val2_;
     }
 
 
-    Tree.prototype = {
+    Tuple.prototype = {
 
         /**
-         * Tree structure equality check
+         * Tuple structure equality check
          * @param that {object} to be compared with
          */
         equals: function(that) {
 
             function eq(left, right) {
-                return (left instanceof Tree ? left.equals(right) : left === right);
+                return (left instanceof Tuple ? left.equals(right) : left === right);
             }
 
-            if (that instanceof Tree) {
+            if (that instanceof Tuple) {
                 return eq(this._1, that._1) && eq(this._2, that._2)
             } else {
                 return false;
@@ -138,23 +138,38 @@
     };
 
 
-    Tree.toLdapFilterList = function(tree) {
-        return new LdapFilterList(tree._1, tree._2);
+    /**
+     * Tries to build {LdapFilterList} from {Tuple} object
+     * @param tuple to be transformed
+     * @returns {LdapFilterList}
+     */
+    Tuple.toLdapFilterList = function(tuple) {
+        return new LdapFilterList(tuple._1, tuple._2);
     };
 
 
-    Tree.toLdapItem = function(tree) {
+    /**
+     * Tries to build {LdapItem} from {Tuple} object
+     * @param tuple tuple to be transformed
+     * @returns {LdapItem}
+     */
+    Tuple.toLdapItem = function(tuple) {
 
         return new LdapItem({
-            attr: tree._1._1,
-            filtertype: tree._1._2,
-            value: tree._2
+            attr: tuple._1._1,
+            filtertype: tuple._1._2,
+            value: tuple._2
         });
     };
 
 
-    Tree.toLdapFilter = function(tree) {
-        return tree._1._2;
+    /**
+     * Tries to build {LdapSyntaxEntryTrait} from {Tuple} object
+     * @param tuple tuple to be transformed
+     * @returns {*}
+     */
+    Tuple.toLdapFilter = function(tuple) {
+        return tuple._1._2;
     };
 
 
@@ -255,7 +270,7 @@
 
         /**
          * Combines `this` as AbstractParser[A] and result of `other` function which is AbstractParser[B] into AbstractParser[A ~ B] which
-         * produces composite type `A ~ B`. it will succeed if both parsers succeeded on given input. Composite type is pepresented by {Tree}
+         * produces composite type `A ~ B`. it will succeed if both parsers succeeded on given input. Composite type is pepresented by {Tuple}
          * object.
          * @param other {function} which produces some AbstractParser[B] i.e. () -> AbstractParser[B]
          * @returns {AbstractParser}
@@ -272,7 +287,7 @@
                     if (rightResult.success) {
                         return {
                             success: true,
-                            value: new Tree(leftResult.value, rightResult.value),
+                            value: new Tuple(leftResult.value, rightResult.value),
                             input: rightResult.input
                         };
                     } else {
@@ -320,7 +335,7 @@
             return self.then(function() { return self.times(); })
                 .map(function(p) {
 
-                    if (p instanceof Tree) {
+                    if (p instanceof Tuple) {
                         return [p._1].concat(p._2)
                     }
                     else { throw new Error("Come up with some idea") }
@@ -377,7 +392,7 @@
             filter: function() {
 
                 return nothing.or(keyword("(")).then(P.filtercomp).then(keyword(")"))
-                    .map(Tree.toLdapFilter);
+                    .map(Tuple.toLdapFilter);
             },
 
             filtercomp: function() {
@@ -386,12 +401,12 @@
 
             and: function() {
                 return nothing.or(keyword("&")).then(P.filterlist)
-                    .map(Tree.toLdapFilterList);
+                    .map(Tuple.toLdapFilterList);
             },
 
             or: function() {
                 return nothing.or(keyword("|")).then(P.filterlist)
-                    .map(Tree.toLdapFilterList);
+                    .map(Tuple.toLdapFilterList);
             },
 
             filterlist: function() {
@@ -404,7 +419,7 @@
             },
 
             item: function() {
-                return P.simple().map(Tree.toLdapItem);
+                return P.simple().map(Tuple.toLdapItem);
             },
 
             simple: function() {
