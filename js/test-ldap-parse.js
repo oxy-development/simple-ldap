@@ -18,7 +18,8 @@ QUnit.test("Token generator test - 1", function(assert) {
         { type: "keyword", value:")"}
     ]);
 
-    const tkn = tokenizer("(&(abc=def)(zxy=oph))");
+
+    const tkn = Oxy.ldapTokenizer("(&(abc=def)(zxy=oph))");
     const result = JSON.stringify(Array.from(tkn));
     assert.ok(result === expected, result);
 });
@@ -36,7 +37,7 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = tokenizer("(abc~=def)");
+        const tkn = Oxy.ldapTokenizer("(abc~=def)");
         return JSON.stringify(Array.from(tkn)) === expected;
     }(), "parse ~= condition");
 
@@ -50,7 +51,7 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = tokenizer("(abc>=def)");
+        const tkn = Oxy.ldapTokenizer("(abc>=def)");
         return JSON.stringify(Array.from(tkn)) === expected;
 
     }(), "parse >= condition");
@@ -65,7 +66,7 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = tokenizer("(abc<=def)");
+        const tkn = Oxy.ldapTokenizer("(abc<=def)");
         return JSON.stringify(Array.from(tkn)) === expected;
 
     }(), "parse <= condition");
@@ -80,7 +81,7 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = tokenizer("( abc <= def )");
+        const tkn = Oxy.ldapTokenizer("( abc <= def )");
         return JSON.stringify(Array.from(tkn)) === expected;
 
     }(), "parse <= condition with whitespaces in identifiers");
@@ -92,7 +93,7 @@ QUnit.test("LdapParser::parse the simplest filter", function(assert) {
     assert.ok(
         function() {
             const strQuery = "(objectName=someObjectName)";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
         },
         "Test filter by '='"
@@ -101,7 +102,7 @@ QUnit.test("LdapParser::parse the simplest filter", function(assert) {
     assert.ok(
         function() {
             const strQuery = "(objectName~=someObjectName)";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
         },
         "Test filter by '~='"
@@ -110,7 +111,7 @@ QUnit.test("LdapParser::parse the simplest filter", function(assert) {
     assert.ok(
         function() {
             const strQuery = "(objectName>=someObjectName)";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
         },
         "Test filter by '>='"
@@ -119,7 +120,7 @@ QUnit.test("LdapParser::parse the simplest filter", function(assert) {
     assert.ok(
         function() {
             const strQuery = "(objectName<=someObjectName)";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
         },
         "Test filter by '<='"
@@ -133,7 +134,7 @@ QUnit.test("LdapParser::parse two combined items", function(assert) {
         function() {
 
             const strQuery = "(&(objectName=someObjectName)(objectType=someObjectType))";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value.toString() === strQuery;
         }(), "Two items connected through &"
     );
@@ -142,7 +143,7 @@ QUnit.test("LdapParser::parse two combined items", function(assert) {
         function() {
 
             const strQuery = "(|(objectName=someObjectName)(objectType=someObjectType))";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value.toString() === strQuery;
         }(), "Two items connected through |"
     );
@@ -154,7 +155,7 @@ QUnit.test("LdapParser::parse filter list of one element", function(assert) {
     assert.ok(
         function() {
             const strQuery = "(&(objectName=someObjectName))";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value.toString() === strQuery;
         }(), "Single item connected through &"
     );
@@ -162,7 +163,7 @@ QUnit.test("LdapParser::parse filter list of one element", function(assert) {
     assert.ok(
         function() {
             const strQuery = "(|(objectName=someObjectName))";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value.toString() === strQuery;
         }(), "Single item connected through |"
     );
@@ -174,7 +175,7 @@ QUnit.test("LdapParse::parse filter list with nested filter list", function(asse
     assert.ok(
         function() {
             const strQuery = "(|(objectName=someObjectName)(&(otherObject=someOtherObject)))";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value.toString() === strQuery;
         }(), "One nested filter list"
     );
@@ -182,7 +183,7 @@ QUnit.test("LdapParse::parse filter list with nested filter list", function(asse
     assert.ok(
         function() {
             const strQuery = "(|(objectName=someObjectName)(&(otherObject=someOtherObject)(|(objectName=someObjectName))))";
-            const result = LdapParser.parse(strQuery);
+            const result = Oxy.LdapParser.parse(strQuery);
             return result.success && result.value.toString() === strQuery;
         }(), "One nested filter with one nested filter"
     );
