@@ -293,10 +293,6 @@
             value: function() {
 
                 var result = '(';
-                if (this.negation) {
-                    result = result + '!';
-                }
-
                 result = result + this.attr + this.filtertype + this.value;
                 result = result + ')';
                 return result;
@@ -385,25 +381,11 @@
          */
         apx: function(value) {
             return this._mkItem("~=", this._escape(value));
-        },
-
-        /**
-         * TODO: This is a mistake. Not a case;
-         * Builds (!field=value)
-         * @param value
-         * @returns {LdapFilter} representation of (!field=value)
-         */
-        neq: function(value) {
-
-            return new LdapFilter({
-                attr: this.param,
-                filtertype: '=',
-                value: value,
-                negation: true
-            });
         }
     };
 
+
+    // Parser implementation
 
     /**
      * Naive token generator
@@ -854,13 +836,18 @@
         return P.filter();
     }();
 
+    // Exports
 
-    // Export to browser's global context
+    // Exports to browser's global context
     if (global.window) {
 
         if (!global.window.hasOwnProperty("Oxy")) {
             global.window.Oxy = {};
         }
+
+        global.window.Oxy.LdapEntryTrait = LdapEntryTrait;
+        global.window.Oxy.LdapFilter = LdapFilter;
+        global.window.Oxy.LdapFilterList = LdapFilterList;
 
         global.window.Oxy.LdapParser = LdapParser;
         global.window.Oxy.ldapTokenizer = tokenizer;
