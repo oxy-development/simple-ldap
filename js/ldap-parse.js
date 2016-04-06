@@ -240,7 +240,7 @@
          */
         parse: function(str) {
 
-            var stream = StreamWrapper.fromArray(Array.from(tokenizer(str)));
+            const stream = StreamWrapper.fromArray(Array.from(tokenizer(str)));
             return this.$parse(stream);
         },
 
@@ -387,7 +387,7 @@
 
 
         /* Products */
-        var P = {
+        const P = {
 
             filter: function() {
 
