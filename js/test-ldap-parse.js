@@ -88,105 +88,73 @@ QUnit.test("Token generator test - 2", function(assert) {
 });
 
 
+/**
+ * Constructs successful assertions
+ * @param assert QUnit's assert
+ * @param queryStr {string} queryStr line
+ * @param resType {Function} expected type
+ * @param note {string} notice
+ * @returns {Function}
+ */
+function assertParsed(assert, queryStr, resType, note) {
+
+    const result = Oxy.LdapParser.parse(queryStr);
+    assert.ok(
+        result.success
+            && result.value instanceof resType
+            && result.value.toString() === queryStr
+        , note);
+}
+
+
 QUnit.test("LdapParser::parse the simplest filter", function(assert) {
 
-    assert.ok(
-        function() {
-            const strQuery = "(objectName=someObjectName)";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
-        },
-        "Test filter by '='"
-    );
-
-    assert.ok(
-        function() {
-            const strQuery = "(objectName~=someObjectName)";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
-        },
-        "Test filter by '~='"
-    );
-
-    assert.ok(
-        function() {
-            const strQuery = "(objectName>=someObjectName)";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
-        },
-        "Test filter by '>='"
-    );
-
-    assert.ok(
-        function() {
-            const strQuery = "(objectName<=someObjectName)";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value instanceof LdapItem && result.value.toString() === strQuery;
-        },
-        "Test filter by '<='"
-    );
+    assertParsed(assert, "(objectName=someObjectName)", Oxy.LdapFilter, "Test filter by '='");
+    assertParsed(assert, "(objectName~=someObjectName)", Oxy.LdapFilter, "Test filter by '~='");
+    assertParsed(assert, "(objectName>=someObjectName)", Oxy.LdapFilter, "Test filter by '>='");
+    assertParsed(assert, "(objectName<=someObjectName)", Oxy.LdapFilter, "Test filter by '<='");
 });
 
 
 QUnit.test("LdapParser::parse two combined items", function(assert) {
 
-    assert.ok(
-        function() {
+    assertParsed(assert,
+        "(&(objectName=someObjectName)(objectType=someObjectType))",
+        Oxy.LdapFilterList,
+        "Two items connected through &");
 
-            const strQuery = "(&(objectName=someObjectName)(objectType=someObjectType))";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value.toString() === strQuery;
-        }(), "Two items connected through &"
-    );
-
-    assert.ok(
-        function() {
-
-            const strQuery = "(|(objectName=someObjectName)(objectType=someObjectType))";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value.toString() === strQuery;
-        }(), "Two items connected through |"
-    );
+    assertParsed(assert,
+        "(|(objectName=someObjectName)(objectType=someObjectType))",
+        Oxy.LdapFilterList,
+        "Two items connected through |");
 });
 
 
 QUnit.test("LdapParser::parse filter list of one element", function(assert) {
 
-    assert.ok(
-        function() {
-            const strQuery = "(&(objectName=someObjectName))";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value.toString() === strQuery;
-        }(), "Single item connected through &"
-    );
+    assertParsed(assert,
+        "(&(objectName=someObjectName))",
+        Oxy.LdapFilterList,
+        "Single item connected through &");
 
-    assert.ok(
-        function() {
-            const strQuery = "(|(objectName=someObjectName))";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value.toString() === strQuery;
-        }(), "Single item connected through |"
-    );
+    assertParsed(assert,
+        "(|(objectName=someObjectName))",
+        Oxy.LdapFilterList,
+        "Single item connected through |");
 });
 
 
 QUnit.test("LdapParse::parse filter list with nested filter list", function(assert) {
 
-    assert.ok(
-        function() {
-            const strQuery = "(|(objectName=someObjectName)(&(otherObject=someOtherObject)))";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value.toString() === strQuery;
-        }(), "One nested filter list"
-    );
+    assertParsed(assert,
+        "(|(objectName=someObjectName)(&(otherObject=someOtherObject)))",
+        Oxy.LdapFilterList,
+        "One nested filter list");
 
-    assert.ok(
-        function() {
-            const strQuery = "(|(objectName=someObjectName)(&(otherObject=someOtherObject)(|(objectName=someObjectName))))";
-            const result = Oxy.LdapParser.parse(strQuery);
-            return result.success && result.value.toString() === strQuery;
-        }(), "One nested filter with one nested filter"
-    );
+    assertParsed(assert,
+        "(|(objectName=someObjectName)(&(otherObject=someOtherObject)(|(objectName=someObjectName))))",
+        Oxy.LdapFilterList,
+        "One nested filter with one nested filter");
 });
 
 // TODO: Put more tests here
