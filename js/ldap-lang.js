@@ -68,11 +68,11 @@
             const self = this;
             function relax(array) {
 
-                var result = [];
-                var proceed = false;
-                for (var i=0, length = array.length; i < length; i++) {
+                let result = [];
+                let proceed = false;
+                for (let i=0, length = array.length; i < length; i++) {
 
-                    var that = array[i];
+                    let that = array[i];
                     if (that instanceof LdapFilterList && that.op === self.op) {
                         proceed = true;
                         result = result.concat(that.seq)
@@ -94,7 +94,7 @@
             return function* () {
 
                 const length = relaxed.length;
-                for (var i = 0; i < length; i++) {
+                for (let i = 0; i < length; i++) {
                     yield relaxed[i];
                 }
             }
@@ -152,15 +152,15 @@
          */
         perform: function() {
 
-            var m = null; // Merger function
-            var stream = this.doRelaxation()();
+            let m = null; // Merger function
+            let stream = this.doRelaxation()();
             while(true) {
 
-                var nextVal = stream.next();
+                let nextVal = stream.next();
                 if (nextVal.done) {
 
                     if (m) {
-                        var result = m.call(this, 0).result;
+                        let result = m.call(this, 0).result;
                         this.accumulator.push(result);
                     }
                     break;
@@ -292,7 +292,7 @@
 
             value: function() {
 
-                var result = '(';
+                let result = '(';
                 result = result + this.attr + this.filtertype + this.value;
                 result = result + ')';
                 return result;
