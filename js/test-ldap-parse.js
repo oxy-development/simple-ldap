@@ -157,4 +157,31 @@ QUnit.test("LdapParse::parse filter list with nested filter list", function(asse
         "One nested filter with one nested filter");
 });
 
+
+QUnit.test("LdapParse::parse filter list with negation", function(assert) {
+
+    assertParsed(assert,
+       "(!(objectName=objectNameValue))",
+        Oxy.LdapFilterList,
+       "One negation object");
+
+    assertParsed(assert,
+        "(!(&(objectName=someObjectName)(objectValue=someObjectValue)))",
+        Oxy.LdapFilterList,
+        "Negation of filter list");
+
+
+    assertParsed(assert,
+        "(&(!(badObjectKey=badObjectValue))(goodObjectKey=goodObjectValue))",
+        Oxy.LdapFilterList,
+        "Negation within filter list");
+
+
+    assertParsed(assert,
+        "(&(|(someGoodKey=someGoodValue)(!(someBadKey=someBadValue)))(someKey3~=3))",
+        Oxy.LdapFilterList,
+        "Negation within within filter list"
+    );
+});
+
 // TODO: Put more tests here

@@ -212,6 +212,14 @@
         },
 
         /**
+         * Builds negation object
+         * @returns {LdapFilterList} representing negation of current object
+         */
+        not: function() {
+            return new LdapFilterList('!', [this]);
+        },
+
+        /**
          * Tries to optimize this value
          */
         optimize: function() {
@@ -535,6 +543,16 @@
 
 
     /**
+     *
+     * @param tuple
+     * @returns {*|LdapFilterList}
+     */
+    Tuple.toLdapNegation = function(tuple) {
+        return tuple._2.not();
+    };
+
+
+    /**
      * Tries to build {LdapItem} from {Tuple} object
      * @param tuple tuple to be transformed
      * @returns {LdapFilter}
@@ -782,7 +800,7 @@
             },
 
             filtercomp: function() {
-                return nothing.or(P.and).or(P.or).or(P.item);
+                return nothing.or(P.and).or(P.or).or(P.not).or(P.item);
             },
 
             and: function() {
@@ -793,6 +811,11 @@
             or: function() {
                 return nothing.or(keyword("|")).then(P.filterlist)
                     .map(Tuple.toLdapFilterList);
+            },
+
+            not: function() {
+                return nothing.or(keyword("!")).then(P.filter)
+                    .map(Tuple.toLdapNegation);
             },
 
             filterlist: function() {
