@@ -859,7 +859,19 @@
         return P.filter();
     }();
 
+
     // Exports
+    function exportObjects(oxy) {
+
+        oxy.LdapEntryTrait = LdapEntryTrait;
+        oxy.LdapFilter = LdapFilter;
+        oxy.LdapFilterList = LdapFilterList;
+
+        oxy.LdapParser = LdapParser;
+        oxy.ldapTokenizer = tokenizer;
+        return oxy;
+    }
+
 
     // Exports to browser's global context
     if (global.window) {
@@ -868,14 +880,12 @@
             global.window.Oxy = {};
         }
 
-        global.window.Oxy.LdapEntryTrait = LdapEntryTrait;
-        global.window.Oxy.LdapFilter = LdapFilter;
-        global.window.Oxy.LdapFilterList = LdapFilterList;
-
-        global.window.Oxy.LdapParser = LdapParser;
-        global.window.Oxy.ldapTokenizer = tokenizer;
+        global.window.Oxy = exportObjects(global.window.Oxy);
     }
 
-    // TODO: Add export to node.js context
+
+    if (typeof module !== "undefined" && module && module.exports) {
+        module.exports = exportObjects({});
+    }
 
 })(function() { return this; } ());

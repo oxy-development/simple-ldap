@@ -1,0 +1,23 @@
+{
+  "name": "simple-ldap",
+  "version": "1.0.0",
+  "description": "Simple library to work with LDAP syntax",
+  "main": "js/ldap-lang.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oxy-development/simple-ldap.git"
+  },
+  "keywords": [
+    "ldap",
+    "syntax"
+  ],
+  "author": "Yuriy Gintsyak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oxy-development/simple-ldap/issues"
+  },
+  "homepage": "https://github.com/oxy-development/simple-ldap#readme"
+}
