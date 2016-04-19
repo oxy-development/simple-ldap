@@ -1,8 +1,8 @@
 {
   "name": "simple-ldap",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Simple library to work with LDAP syntax",
-  "main": "js/ldap-lang.js",
+  "main": "js/simple-ldap.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,9 +15,14 @@
     "syntax"
   ],
   "author": "Yuriy Gintsyak",
-  "license": "ISC",
+  "license": "Apache 2.0",
   "bugs": {
     "url": "https://github.com/oxy-development/simple-ldap/issues"
   },
-  "homepage": "https://github.com/oxy-development/simple-ldap#readme"
+  "homepage": "https://github.com/oxy-development/simple-ldap#readme",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-nodeunit": "^1.0.0"
+  }
 }

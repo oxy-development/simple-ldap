@@ -1,33 +1,35 @@
+var Oxy = require("../src/simple-ldap.js");
 
 
-QUnit.test("Token generator test - 1", function(assert) {
+exports.testTokenGenerator1 = function(test) {
 
-    const expected = JSON.stringify([
+    var expected = JSON.stringify([
         { type: "keyword", value:"(" },
         { type: "keyword", value:"&" },
-            { type: "keyword", value:"(" },
-                { type: "identifier", value: "abc" },
-                { type: "keyword", value: "="},
-                { type: "identifier", value: "def" },
-            { type: "keyword", value: ")" },
-            { type: "keyword", value: "(" },
-                { type: "identifier", value:"zxy" },
-                { type: "keyword", value: "=" },
-                { type: "identifier", value: "oph" },
-            { type: "keyword", value:")" },
+        { type: "keyword", value:"(" },
+        { type: "identifier", value: "abc" },
+        { type: "keyword", value: "="},
+        { type: "identifier", value: "def" },
+        { type: "keyword", value: ")" },
+        { type: "keyword", value: "(" },
+        { type: "identifier", value:"zxy" },
+        { type: "keyword", value: "=" },
+        { type: "identifier", value: "oph" },
+        { type: "keyword", value:")" },
         { type: "keyword", value:")"}
     ]);
 
 
-    const tkn = Oxy.ldapTokenizer("(&(abc=def)(zxy=oph))");
-    const result = JSON.stringify(Array.from(tkn));
-    assert.ok(result === expected, result);
-});
+    var tkn = Oxy.ldapTokenizer("(&(abc=def)(zxy=oph))");
+    var result = JSON.stringify(Array.from(tkn));
+    test.ok(result === expected, "Token generator test - 1, result: " + result);
+    test.done();
+};
 
 
-QUnit.test("Token generator test - 2", function(assert) {
+exports.testTokenGenerator2 = function(test) {
 
-    assert.ok(function () {
+    test.ok(function () {
 
         var expected = JSON.stringify([
             { type: "keyword", value: "(" },
@@ -37,11 +39,11 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = Oxy.ldapTokenizer("(abc~=def)");
+        var tkn = Oxy.ldapTokenizer("(abc~=def)");
         return JSON.stringify(Array.from(tkn)) === expected;
     }(), "parse ~= condition");
 
-    assert.ok(function () {
+    test.ok(function () {
 
         var expected = JSON.stringify([
             { type: "keyword", value: "(" },
@@ -51,12 +53,12 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = Oxy.ldapTokenizer("(abc>=def)");
+        var tkn = Oxy.ldapTokenizer("(abc>=def)");
         return JSON.stringify(Array.from(tkn)) === expected;
 
     }(), "parse >= condition");
 
-    assert.ok(function () {
+    test.ok(function () {
 
         var expected = JSON.stringify([
             { type: "keyword", value: "(" },
@@ -66,12 +68,12 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = Oxy.ldapTokenizer("(abc<=def)");
+        var tkn = Oxy.ldapTokenizer("(abc<=def)");
         return JSON.stringify(Array.from(tkn)) === expected;
 
     }(), "parse <= condition");
 
-    assert.ok(function () {
+    test.ok(function () {
 
         var expected = JSON.stringify([
             { type: "keyword", value: "(" },
@@ -81,25 +83,26 @@ QUnit.test("Token generator test - 2", function(assert) {
             { type: "keyword", value: ")" }
         ]);
 
-        const tkn = Oxy.ldapTokenizer("( abc <= def )");
+        var tkn = Oxy.ldapTokenizer("( abc <= def )");
         return JSON.stringify(Array.from(tkn)) === expected;
 
     }(), "parse <= condition with whitespaces in identifiers");
-});
+    test.done();
+};
 
 
 /**
  * Constructs successful assertions
- * @param assert QUnit's assert
+ * @param test nunit's test object
  * @param queryStr {string} queryStr line
  * @param resType {Function} expected type
  * @param note {string} notice
  * @returns {Function}
  */
-function assertParsed(assert, queryStr, resType, note) {
+function assertParsed(test, queryStr, resType, note) {
 
-    const result = Oxy.LdapParser.parse(queryStr);
-    assert.ok(
+    var result = Oxy.LdapParser.parse(queryStr);
+    test.ok(
         result.success
             && result.value instanceof resType
             && result.value.toString() === queryStr
@@ -107,81 +110,86 @@ function assertParsed(assert, queryStr, resType, note) {
 }
 
 
-QUnit.test("LdapParser::parse the simplest filter", function(assert) {
+exports.parseSimpleFilters = function(test) {
 
-    assertParsed(assert, "(objectName=someObjectName)", Oxy.LdapFilter, "Test filter by '='");
-    assertParsed(assert, "(objectName~=someObjectName)", Oxy.LdapFilter, "Test filter by '~='");
-    assertParsed(assert, "(objectName>=someObjectName)", Oxy.LdapFilter, "Test filter by '>='");
-    assertParsed(assert, "(objectName<=someObjectName)", Oxy.LdapFilter, "Test filter by '<='");
-});
+    assertParsed(test, "(objectName=someObjectName)", Oxy.LdapFilter, "Test filter by '='");
+    assertParsed(test, "(objectName~=someObjectName)", Oxy.LdapFilter, "Test filter by '~='");
+    assertParsed(test, "(objectName>=someObjectName)", Oxy.LdapFilter, "Test filter by '>='");
+    assertParsed(test, "(objectName<=someObjectName)", Oxy.LdapFilter, "Test filter by '<='");
+    test.done();
+};
 
 
-QUnit.test("LdapParser::parse two combined items", function(assert) {
+exports.parseTwoCombinedFilters = function(test) {
 
-    assertParsed(assert,
+    assertParsed(test,
         "(&(objectName=someObjectName)(objectType=someObjectType))",
         Oxy.LdapFilterList,
         "Two items connected through &");
 
-    assertParsed(assert,
+    assertParsed(test,
         "(|(objectName=someObjectName)(objectType=someObjectType))",
         Oxy.LdapFilterList,
         "Two items connected through |");
-});
+    test.done();
+};
 
 
-QUnit.test("LdapParser::parse filter list of one element", function(assert) {
+exports.parseFilterListOfOneElement = function(test) {
 
-    assertParsed(assert,
+    assertParsed(test,
         "(&(objectName=someObjectName))",
         Oxy.LdapFilterList,
         "Single item connected through &");
 
-    assertParsed(assert,
+    assertParsed(test,
         "(|(objectName=someObjectName))",
         Oxy.LdapFilterList,
         "Single item connected through |");
-});
+    test.done();
+};
 
 
-QUnit.test("LdapParse::parse filter list with nested filter list", function(assert) {
+exports.parseFilterListWithNestedFilterList = function(test) {
 
-    assertParsed(assert,
+    assertParsed(test,
         "(|(objectName=someObjectName)(&(otherObject=someOtherObject)))",
         Oxy.LdapFilterList,
         "One nested filter list");
 
-    assertParsed(assert,
+    assertParsed(test,
         "(|(objectName=someObjectName)(&(otherObject=someOtherObject)(|(objectName=someObjectName))))",
         Oxy.LdapFilterList,
         "One nested filter with one nested filter");
-});
+    test.done();
+};
 
 
-QUnit.test("LdapParse::parse filter list with negation", function(assert) {
+exports.parseFiltersWithNegations = function(test) {
 
-    assertParsed(assert,
+    assertParsed(test,
        "(!(objectName=objectNameValue))",
         Oxy.LdapFilterList,
        "One negation object");
 
-    assertParsed(assert,
+    assertParsed(test,
         "(!(&(objectName=someObjectName)(objectValue=someObjectValue)))",
         Oxy.LdapFilterList,
         "Negation of filter list");
 
 
-    assertParsed(assert,
+    assertParsed(test,
         "(&(!(badObjectKey=badObjectValue))(goodObjectKey=goodObjectValue))",
         Oxy.LdapFilterList,
         "Negation within filter list");
 
 
-    assertParsed(assert,
+    assertParsed(test,
         "(&(|(someGoodKey=someGoodValue)(!(someBadKey=someBadValue)))(someKey3~=3))",
         Oxy.LdapFilterList,
         "Negation within within filter list"
     );
-});
+    test.done();
+};
 
 // TODO: Put more tests here

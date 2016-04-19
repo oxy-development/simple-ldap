@@ -1,3 +1,5 @@
 
 # Ignore idea stuff
 .idea/*
+node_modules/*
+test_reports/*

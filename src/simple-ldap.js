@@ -1,6 +1,6 @@
-
-
 (function(global) {
+
+    'use strict';
 
     /**
      * Base trait for LDAP query components
