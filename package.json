@@ -2,7 +2,7 @@
   "name": "simple-ldap",
   "version": "0.1.0",
   "description": "Simple library to work with LDAP syntax",
-  "main": "js/simple-ldap.js",
+  "main": "src/simple-ldap.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
