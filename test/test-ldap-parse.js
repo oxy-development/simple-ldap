@@ -110,7 +110,7 @@ function assertParsed(test, queryStr, resType, note) {
 }
 
 
-exports.parseSimpleFilters = function(test) {
+exports.testParseSimpleFilters = function(test) {
 
     assertParsed(test, "(objectName=someObjectName)", Oxy.LdapFilter, "Test filter by '='");
     assertParsed(test, "(objectName~=someObjectName)", Oxy.LdapFilter, "Test filter by '~='");
@@ -120,7 +120,7 @@ exports.parseSimpleFilters = function(test) {
 };
 
 
-exports.parseTwoCombinedFilters = function(test) {
+exports.testParseTwoCombinedFilters = function(test) {
 
     assertParsed(test,
         "(&(objectName=someObjectName)(objectType=someObjectType))",
@@ -135,7 +135,7 @@ exports.parseTwoCombinedFilters = function(test) {
 };
 
 
-exports.parseFilterListOfOneElement = function(test) {
+exports.testParseFilterListOfOneElement = function(test) {
 
     assertParsed(test,
         "(&(objectName=someObjectName))",
@@ -150,7 +150,7 @@ exports.parseFilterListOfOneElement = function(test) {
 };
 
 
-exports.parseFilterListWithNestedFilterList = function(test) {
+exports.testParseFilterListWithNestedFilterList = function(test) {
 
     assertParsed(test,
         "(|(objectName=someObjectName)(&(otherObject=someOtherObject)))",
@@ -165,7 +165,7 @@ exports.parseFilterListWithNestedFilterList = function(test) {
 };
 
 
-exports.parseFiltersWithNegations = function(test) {
+exports.testParseFiltersWithNegations = function(test) {
 
     assertParsed(test,
        "(!(objectName=objectNameValue))",
