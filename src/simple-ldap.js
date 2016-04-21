@@ -286,6 +286,18 @@
             enumerable: true,
             configurable: true,
             writable: true
+        },
+
+
+        // New definitions
+        isNot: {
+
+            value: function() {
+                return this.op === '!';
+            },
+            enumerable: true,
+            configurable: true,
+            writable: true
         }
     });
 
@@ -318,6 +330,10 @@
     function LdapFilterBuilder(param) {
         this.param = param;
     }
+
+    LdapFilter.New = function(name) {
+        return new LdapFilterBuilder(name);
+    };
 
 
     LdapFilterBuilder.prototype = {
