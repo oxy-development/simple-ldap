@@ -425,10 +425,11 @@
             return { type: "identifier", value: value.trim() };
         }
 
+        let length = str.length;
         let identifier=false;
         let accumulator=[];
 
-        for (let i = 0, len = str.length ; i < len; i++) {
+        for (let i = 0, len = length ; i < len; i++) {
 
             switch (str[i]) {
 
@@ -690,7 +691,7 @@
 
         /**
          * Combines `this` as AbstractParser[A] and result of `other` function which is AbstractParser[B] into AbstractParser[A ~ B] which
-         * produces composite type `A ~ B`. it will succeed if both parsers succeeded on given input. Composite type is pepresented by {Tuple}
+         * produces composite type `A ~ B`. it will succeed if both parsers succeed on given input. Composite type is represented by {Tuple}
          * object.
          * @param other {function} which produces some AbstractParser[B] i.e. () -> AbstractParser[B]
          * @returns {AbstractParser}
@@ -757,8 +758,10 @@
 
                     if (p instanceof Tuple) {
                         return [p._1].concat(p._2)
+                    } else {
+                        // TODO: What now?
+                        throw new Error("Come up with some idea")
                     }
-                    else { throw new Error("Come up with some idea") }
                 })
                 .or(function() { return AbstractParser.Success([]); });
         }
